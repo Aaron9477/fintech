@@ -170,8 +170,10 @@ def preprocess(input_df):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='合并结果.xlsx')
+    parser.add_argument('--output_file', type=str, help='output_file', default='固收+分类_大类资产穿透_委外分析.xlsx')
     args = parser.parse_args()
 
+    output_file = args.output_file
     df = pd.read_excel(args.input_file)
 
     # 前处理
@@ -351,7 +353,7 @@ if __name__ == '__main__':
             asset_res_list_final.append(asset_res)
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
 
-    writer = pd.ExcelWriter('../../固收+分类_大类资产穿透_委外分析.xlsx')
+    writer = pd.ExcelWriter(output_file)
     enhance_type_res_df.to_excel(writer, sheet_name='固收增强分类')
     asset_res_list_df.to_excel(writer, sheet_name='大类资产穿透')
     outsourcing_res_list_df.to_excel(writer, sheet_name='委外分析')

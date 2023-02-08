@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Dec 01 17:20:45 2022
-固收+/大类资产统计分析步骤二：根据前十大持仓和非标数据分析固收增强
+先运行base_analysis1_asset_allocation_reflect.py,对资产名称进行映射
+固收+/大类资产统计分析步骤一：根据前十大持仓和非标数据分析固收增强
 @author: 王永镇
 """
 
