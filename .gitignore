@@ -1,0 +1,8 @@
+*.xls
+*.xlsx
+*.db
+!1_PrivatePlacementDatabase/src/function/test2.db
+*.csv
+*.rar
+*.exe
+*.idea
