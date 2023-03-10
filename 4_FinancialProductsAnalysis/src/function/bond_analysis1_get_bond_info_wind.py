@@ -32,13 +32,13 @@ def get_info_from_wind_on_fixed_day(fund_set, index, search_feat, statistics_dat
 
 
 # 批量拉取债券字段（除了债券名称）
-def get_bond_feat(input_df, bund_code_list, statistics_date):
+def get_bond_feat(input_df, bund_code_list, statistics_date, start_index):
     # list转set，用于从万德拉取数据
     bond_code_set = list(set(bund_code_list))
     if "" in bond_code_set:
         bond_code_set.remove("")
 
-    index = 1
+    index = start_index
     for feat in target_feature[1:]:
         fund_value_dict = dict()
         # 数据拉取。一次性拉取太多会报错，所以分批拉取数据
@@ -114,12 +114,14 @@ if __name__ == '__main__':
     parser.add_argument('--input_file', type=str, help='input_file', default='../data/金融产品投资组合明细_22年三季报_230105_手动修改.csv')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data/bank_wealth_product_01_16.csv')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
+    parser.add_argument('--output_file', type=str, help='output_file', default='债券信息.xlsx')
     args = parser.parse_args()
 
     df = pd.read_csv(args.input_file)
     all_data_df = pd.read_csv(args.all_data_file, encoding='gbk')[['FinProCode', 'MaturityDate', 'product_establish_date',
                                                                    'RegistrationCode', 'ProductType']]
     statistics_date = args.statistics_date
+    output_file = args.output_file
 
     # 理财产品前处理
     df = df_preprocess(df, all_data_df, statistics_date)
@@ -142,6 +144,8 @@ if __name__ == '__main__':
     df['债券名称'] = search_res
     df['债券代码'] = bond_code_list
 
-    get_bond_feat(df, bond_code_list, statistics_date)
+    # 批量拉取债券字段（除了前面已经拉取的债券名称，所以start_index从1开始）
+    start_index = 1
+    get_bond_feat(df, bond_code_list, statistics_date, start_index)
 
-    df.to_excel("债券信息2.xlsx")
+    df.to_excel(output_file)

@@ -1,25 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-    固收+/大类资产统计分析步骤四：计算各个理财产品大类资产的配比情况
+    固收+/大类资产统计分析步骤二：计算各个理财产品大类资产的配比情况
 """
 import pandas as pd
 import numpy as np
 import argparse
 from enum import Enum
-from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
-import datetime, time
-
-
-# 前处理模块 部分规则由智妍提供
-def df_preprocess(all_data_df, statistics_date):
-    # 筛选子产品 all_data_df
-    screen_df = choose_product_mother_son(all_data_df)['FinProCode']
-    output_df = all_data_df.merge(screen_df, how='inner', on='FinProCode')
-
-    # 筛选存续期产品
-    output_df = get_product_exist(output_df, statistics_date)
-
-    return output_df
 
 
 class FixedIncomeDataType(Enum):
@@ -147,66 +133,51 @@ def cal_second_asset_proportion(input_df, col_name, first_asset_proportion_dict,
     return second_asset_dict
 
 
-def judge_enhance_type(input):
-    input_df = input.copy()
+def preprocessing(input_df):
+    # 按 半年度投资管理报告、季度投资管理报告、定期报告 的顺序，选取一份报告做后续处理
+    if len(input_df[(input_df['InfoSource'] == '半年度投资管理报告')]) > 0:
+        input_df = input_df[(input_df['InfoSource'] == '半年度投资管理报告')]
+    elif len(input_df[(input_df['InfoSource'] == '季度投资管理报告')]) > 0:
+        input_df = input_df[(input_df['InfoSource'] == '季度投资管理报告')]
+    elif len(input_df[(input_df['InfoSource'] == '定期报告')]) > 0:
+        input_df = input_df[(input_df['InfoSource'] == '定期报告')]
 
-    equity_asset_list = ['权益类', '混合类', '前十大_权益类']
-    commodities_derivatives_asset_list = ['商品及衍生品', '混合类']
-    non_standard_asset_list = ['非标资产', '前十大_非标资产']
-    QDII_list = ['QDII', '前十大_QDII']
-    enhance_type_list = []
-
-    for index, row in input_df.iterrows():
-        asset_list = []
-        for asset in equity_asset_list:
-            if row[asset] > 0:
-                asset_list.append('权益')
-                break
-        for asset in commodities_derivatives_asset_list:
-            # 衍生品投资有亏钱的
-            if not np.isnan(row[asset]) and row[asset] != 0:
-                asset_list.append('衍生品')
-                break
-        for asset in non_standard_asset_list:
-            if row[asset] > 0:
-                asset_list.append('非标')
-                break
-        for asset in QDII_list:
-            if row[asset] > 0:
-                asset_list.append('QDII')
-                break
-
-        # 是否投资了含权基金
-        if row['资产明细是否有含权基金'] == 1 and '权益' not in asset_list:
-            asset_list.append('权益')
-
-        # 未识别出固收增强的，判断是否是纯债还是无法判断
-        if len(asset_list) == 0:
-            if row['固收'] > 0.95:
-                enhance_type_list.append('纯债')
-            elif isinstance(row['固收'], str) or not np.isnan(row['固收']):
-                enhance_type_list.append('固收+(其他)')
-            else:
-                enhance_type_list.append('底层数据未披露')
-        else:
-            asset_list.sort()
-            tmp = '固收+(' + ','.join(asset_list) + ')'
-            enhance_type_list.append(tmp)
-
-    input_df['enhance_type_asset'] = enhance_type_list
     return input_df
 
 
-def cal_asset_allocation_ratio(input_df):
+def judge_enhance_type(proportion_dict, product_name):
+    # 判断是否是根据FOF进行增强
+    if 'FOF' in product_name or 'fof' in product_name:
+        return 'FOF增强'
+
+    # 判断纯固收
+    if proportion_dict['固收'] > 0.95:
+        return '纯固收'
+
+    tmp_dict = proportion_dict.copy()
+    # 移除固定收益类、资管类、其他类
+    del tmp_dict['固收'], tmp_dict['资管产品'], tmp_dict['其他']
+
+    asset_weight_list = sorted(tmp_dict.items(), key=lambda x: x[1], reverse=True)
+    # 占比最大且超过5%的作为增强类型
+    if asset_weight_list[0][1] >= 0.05:
+        return asset_weight_list[0][0]
+    else:
+        return 'None'
+
+
+def judge_enhancement_type(input_df):
     # 前处理
+    input_df = preprocessing(input_df)
     if input_df.shape[0] == 0:
         return
 
-    # 提取用于输出的基础信息
     output_dict = dict(input_df.iloc[0])
     del output_dict['Unnamed: 0'], output_dict['AssetTypeCode'], output_dict['AssetName'], output_dict['MarketValue'],\
         output_dict['RatioInNV'], output_dict['详细大类资产'], output_dict['大类资产'], output_dict['RatioInTotalAsset']
+    product_name = output_dict['ChiName']
 
+    fixedIncomeDataType = None
     # 固定收益类数据情况分类
     # 是否有固收一级分类（即'固定收益类'）
     # 非标准化债权其实当做一个一级分类
@@ -256,6 +227,7 @@ def cal_asset_allocation_ratio(input_df):
     second_asset_proportion_norm_dict = proportion_normalization(second_asset_proportion_dict)
 
     output_dict.update(first_asset_proportion_norm_dict)
+    output_dict['enhance_type_asset'] = judge_enhance_type(first_asset_proportion_norm_dict, product_name)
     output_dict.update(second_asset_proportion_norm_dict)
     return output_dict
 
@@ -275,60 +247,48 @@ def add_final_enhancement_type(input_df):
     return input_df
 
 
-def get_asset_allocation_ratio(input):
-    input_df = input.copy()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表_分类后.xlsx')
+    parser.add_argument('--target_file', type=str, help='target_file', default='../data/bank_wealth_product_12_22.csv')
+    parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data/系列名称对应_22三季报_221222.xlsx')
+    parser.add_argument('--top10_file', type=str, help='input_file', default='前十大持仓固收增强分析.xlsx')
+    args = parser.parse_args()
 
-    output_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'InfoPublDate', 'InfoSource',
+    df = pd.read_excel(args.input_file)
+    top10_df = pd.read_excel(args.top10_file)
+
+    grouped = df.groupby('FinProCode')
+
+    output_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'InfoPublDate', 'InfoSource', 'enhance_type_asset',
                                       '固收', '资管产品', '混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产'])
 
-    grouped = input_df.groupby('FinProCode')
     # 固收+产品分类
     index = 0
-    print("开始计算资产配置表的资产占比")
     for group_name in list(grouped.groups.keys()):
-        res_dict = cal_asset_allocation_ratio(grouped.get_group(group_name))
+        res_dict = judge_enhancement_type(grouped.get_group(group_name))
+        # print(res_dict)
         output_df = output_df.append(res_dict, ignore_index=True)
         index += 1
         if index % 1000 == 0:
             print(index)
-    return output_df
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data/bank_wealth_product_01_16.csv')
-    parser.add_argument('--asset_allocation_file', type=str, help='asset_allocation_file', default='../../金融产品资产配置表_分类后.xlsx')
-    parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../../../data/系列名称对应_22三季报_230208.xlsx')
-    parser.add_argument('--top10_file', type=str, help='input_file', default='前十大持仓固收增强分析.xlsx')
-    parser.add_argument('--fund_whether_has_equity_file', type=str, help='fund_whether_has_equity_file', default='资产明细是否有含权基金_基于基金持仓.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
-    args = parser.parse_args()
-
-    all_data_df = pd.read_csv(args.all_data_file, encoding='gbk')
-    asset_allocation_df = pd.read_excel(args.asset_allocation_file)
+    # 增加产品名称
     series_name_df = pd.read_excel(args.series_name_file)
-    top10_df = pd.read_excel(args.top10_file)
-    fund_whether_has_equity_df = pd.read_excel(args.fund_whether_has_equity_file)
-    statistics_date = args.statistics_date
+    series_name_df['set_name'] = series_name_df['set'].apply(lambda x: x.split('-')[0])
 
-    # 计算理财产品资产配置表投资产的比例
-    asset_allocation_ratio_df = get_asset_allocation_ratio(asset_allocation_df)
+    output_df = pd.merge(output_df, series_name_df[['FinProCode', 'set_name']], how='left', on=['FinProCode'])
+    output_df = pd.merge(output_df, top10_df[['FinProCode', 'enhance_type_top10']], how='left', on=['FinProCode'])
+    output_df = add_final_enhancement_type(output_df)
 
-    # 对bank表进行过滤
-    all_data_df = df_preprocess(all_data_df, statistics_date)
+    output_df.to_excel('固收增强分类结果.xlsx')
 
-    all_data_df = all_data_df.merge(asset_allocation_ratio_df[[
-        'FinProCode', '固收', '资管产品', '混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']], how='left', on='FinProCode')
-    all_data_df = all_data_df.merge(top10_df[['FinProCode', '前十大_权益类', '前十大_非标资产', '前十大_商品及衍生品', '前十大_QDII']], how='left', on='FinProCode')
-    all_data_df = all_data_df.merge(fund_whether_has_equity_df[['FinProCode', '资产明细是否有含权基金']], how='left', on='FinProCode')
-
-    # 增加系列名称
-    series_name_df['set'] = series_name_df['set'].str.split('-').str.get(0)
-    all_data_df = pd.merge(all_data_df, series_name_df[['FinProCode', 'set']], how='left', on=['FinProCode'])
-
-    output_df = judge_enhance_type(all_data_df)
-    tmp_output_df = output_df[(output_df['InvestmentType'] == '固定收益类') & (output_df['inv_type'] == 0)]
-    tmp_output_df.to_excel('固收增强分类结果.xlsx')
-
+    target_df = pd.read_csv(args.target_file, encoding="utf-8", error_bad_lines=False)
+    res_df = pd.merge(target_df, output_df[['FinProCode', 'set_name', 'InfoSource', 'enhance_type_asset', 'enhance_type_top10',
+                                            'enhance_type', '固收', '资管产品', '混合类',
+                                            'QDII', '其他', '权益类', '商品及衍生品', '非标资产', "固定收益类:货币类",
+                                            "固定收益类:债券类", "固定收益类:资产支持证券", "资管产品:公募基金",
+                                            "资管产品:私募资管产品/信托计划/计划类资产", "资管产品:委外投资", "未穿透的固定", "未穿透的资管产品"]], how='left', on=['FinProCode'])
+    res_df.to_excel('合并结果.xlsx')
 
 

@@ -323,7 +323,7 @@ if __name__ == '__main__':
     all_data_df = all_data_df.merge(fund_whether_has_equity_df[['FinProCode', '资产明细是否有含权基金']], how='left', on='FinProCode')
 
     # 增加系列名称
-    series_name_df['set'] = series_name_df['set'].str.split('_').str.get(0)
+    series_name_df['set'] = series_name_df['set'].str.split('-').str.get(0)
     all_data_df = pd.merge(all_data_df, series_name_df[['FinProCode', 'set']], how='left', on=['FinProCode'])
 
     output_df = judge_enhance_type(all_data_df)

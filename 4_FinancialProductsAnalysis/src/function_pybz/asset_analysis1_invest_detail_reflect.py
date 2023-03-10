@@ -2,7 +2,7 @@
 """
 Created on Tue Dec 01 17:20:45 2022
 先运行base_analysis1_asset_allocation_reflect.py,对资产名称进行映射
-固收+统计分析步骤一：根据前十大持仓和非标数据分析固收增强
+固收+/大类资产统计分析步骤一：根据前十大持仓和非标数据分析固收增强
 @author: 王永镇
 """
 
@@ -48,6 +48,14 @@ other_list = ["CBS00000000K", "CFN000000ADG", ]
 # QDII_list = []
 
 
+def get_main_product_ind(data_set_RegistrationCode):
+    ProductTypes = data_set_RegistrationCode['ProductType']
+    tags = ['母产品', '产品', '子产品']
+    for tag in tags:
+        if tag in ProductTypes.values:
+            return ProductTypes[ProductTypes == tag].index[0]
+
+
 def df_preprocess(input_df, all_data_df, statistics_date):
     # 筛选子产品 all_data_df
     all_data_df = choose_product_mother_son(all_data_df)
@@ -85,12 +93,12 @@ def invest_detail_reflect(input_df):
 # 统计大类资产情况
 def cal_asset_proportion(input_df, col_name):
     # 资产比例记录
-    asset_proportion = {"前十大_固收类": 0, "前十大_权益类": 0, "前十大_商品及衍生品": 0, "前十大_非标资产": 0, "前十大_QDII": 0}
-    asset_proportion['前十大_固收类'] = input_df[(input_df['invest_type'] == '固收类')][col_name].sum()
-    asset_proportion['前十大_权益类'] = input_df[(input_df['invest_type'] == '权益类')][col_name].sum()
-    asset_proportion['前十大_商品及衍生品'] = input_df[(input_df['invest_type'] == '商品及衍生品')][col_name].sum()
-    asset_proportion['前十大_非标资产'] = input_df[(input_df['invest_type'] == '非标资产')][col_name].sum()
-    asset_proportion['前十大_QDII'] = input_df[(input_df['invest_type'] == 'QDII')][col_name].sum()
+    asset_proportion = {"固收类": 0, "权益类": 0, "商品及衍生品": 0, "非标资产": 0, "QDII": 0}
+    asset_proportion['固收类'] = input_df[(input_df['invest_type'] == '固收类')][col_name].sum()
+    asset_proportion['权益类'] = input_df[(input_df['invest_type'] == '权益类')][col_name].sum()
+    asset_proportion['商品及衍生品'] = input_df[(input_df['invest_type'] == '商品及衍生品')][col_name].sum()
+    asset_proportion['非标资产'] = input_df[(input_df['invest_type'] == '非标资产')][col_name].sum()
+    asset_proportion['QDII'] = input_df[(input_df['invest_type'] == 'QDII')][col_name].sum()
 
     return asset_proportion
 
@@ -99,14 +107,14 @@ def judge_enhance_type(proportion_dict):
     tmp_dict = proportion_dict.copy()
 
     # 移除固定收益类、资管类、其他类
-    del tmp_dict['前十大_固收类']
+    del tmp_dict['固收类']
 
     asset_weight_list = sorted(tmp_dict.items(), key=lambda x: x[1], reverse=True)
     # 占比最大且超过5%的作为增强类型
     if asset_weight_list[0][1] >= 0.05:
         return asset_weight_list[0][0]
     else:
-        if proportion_dict['前十大_固收类'] > 0.9:
+        if proportion_dict['固收类'] > 0.9:
             return '纯固收'
 
 
@@ -158,12 +166,12 @@ if __name__ == '__main__':
 
     df = pd.read_csv(args.input_file)
 
-    # 理财产品前处理
+    # 前处理
     df = df_preprocess(df, all_data_df, statistics_date)
     df = invest_detail_reflect(df)
 
     output_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'InfoPublDate', 'InfoSource', 'enhance_type_top10',
-                                      '前十大_权益类', '前十大_非标资产', '前十大_商品及衍生品', '前十大_QDII', '前十大_固收类'])
+                                      '权益类', '非标资产', '商品及衍生品', 'QDII', '固收类'])
 
     # 固收+产品分类
     index = 0

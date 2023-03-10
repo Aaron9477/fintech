@@ -10,6 +10,11 @@ import argparse
 import datetime
 
 w.start()
-wind_return = w.wsd("000015.OF,000037.OF,000217.OF,000218.OF", "prt_stocktonav", "2022-09-30", "2022-09-30", "")
+wind_return = w.wsd("019014.SH", "maturitydate,bduration,sduration,modidura_cnbd,sprdura_cnbd,interestduration_cnbd,weight_modidura,weight_sprdura,weight_interestduration", "2022-09-30", "2022-09-30", "credibility=1")
+print(wind_return)
+wind_return = w.wsd("2201011S.IB", "maturitydate,bduration,sduration,modidura_cnbd,sprdura_cnbd,interestduration_cnbd,weight_modidura,weight_sprdura,weight_interestduration", "2022-09-30", "2022-09-30", "credibility=1")
+print(wind_return)
+wind_return = w.wsd("101003.SH", "maturitydate,bduration,sduration,modidura_cnbd,sprdura_cnbd,interestduration_cnbd,weight_modidura,weight_sprdura,weight_interestduration", "2022-09-30", "2022-09-30", "credibility=1")
+
 
 print(wind_return)
