@@ -162,7 +162,7 @@ def update_database(args):
     if args.is_delete_old_database == 1:
         delete_database(cursor)
     if args.is_create_new_database == 1:
-        # 建立数据库，只需要执行一次
+        # 新建数据库，只需要执行一次。后续更新数据库不需要再执行
         create_database(cursor)
 
     # 读取excel各个sheet
@@ -181,7 +181,7 @@ def update_database(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='输入文件', default='../../tests/重点观察私募周报（2022年第52周，2022.12.30）.xlsx')
+    parser.add_argument('--input_file', type=str, help='输入文件', default='../../tests/重点观察私募周报（2023年第9周，2023.03.03）(6).xlsx')
     parser.add_argument('--output_file', type=str, help='输出文件', default='test2.db')
     parser.add_argument('--is_create_new_database', type=int, help='是否新建数据库', default=0)
     parser.add_argument('--is_delete_old_database', type=int, help='是否删除老数据库', default=0)

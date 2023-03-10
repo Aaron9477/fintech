@@ -27,7 +27,7 @@ def datatime_transfer1(input_time_list):
 def datatime_transfer2(input_time_list):
     output_time_list = []
     for time in input_time_list:
-        time_datetime = datetime.datetime.strptime(time, '%Y/%m/%d')
+        time_datetime = datetime.datetime.strptime(time, '%Y/%m/%d %H:%M')
         output_time = time_datetime.strftime('%Y/%m/%d %H:%M')
         output_time_list.append(output_time)
     return output_time_list
@@ -57,7 +57,8 @@ def get_nval_from_database(conn, cursor):
     old_nval = old_nval[["FUND_ID", "PRICE_DATE", "NAV", "CUMULATIVE_NAV"]]
 
     time_list = list(old_nval['PRICE_DATE'])
-    old_nval['PRICE_DATE'] = datatime_transfer1(time_list)
+    # old_nval['PRICE_DATE'] = datatime_transfer1(time_list)
+    old_nval['PRICE_DATE'] = datatime_transfer2(time_list)
 
     time_list = list(fund_nval_with_smpp_id['PRICE_DATE'])
     fund_nval_with_smpp_id['PRICE_DATE'] = datatime_transfer1(time_list)

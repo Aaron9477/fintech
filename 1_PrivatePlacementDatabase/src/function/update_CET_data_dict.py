@@ -56,14 +56,14 @@ def get_fund_info_list_from_database(conn, cursor):
 
 def write_CET_data_dict(cet_data_dict_path, add_fund_list):
     print(cet_data_dict_path)
-    old_data = pd.read_csv(cet_data_dict_path, encoding='gb18030')
+    old_data = pd.read_csv(cet_data_dict_path)
     # old_data = pd.read_csv(cet_data_dict_path, encoding='utf_8_sig')
 
     # time_list = list(old_data['成立日期'])
     # old_data['成立日期'] = datatime_transfer1(time_list)
 
     new_fund_list = old_data.append(add_fund_list)
-    new_fund_list.drop_duplicates(subset=['产品简称'], keep='first')
+    new_fund_list.drop_duplicates(subset=['产品简称'], keep='first', inplace=True)
 
     # print("fund_base_info中的establish_time形式由2022/01/01改为了2022-01-01")
     # print("当前工具不能使用，需要修改！！！！")
