@@ -64,12 +64,6 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     # 筛选存续期产品
     input_df = get_product_exist(input_df, statistics_date)
 
-    # 报告筛选
-    input_df = choose_report_detail_table(input_df, statistics_date)
-
-    # 先取穿透后再取穿透前
-    input_df = choose_penetration_data(input_df)
-
     return input_df
 
 
@@ -146,12 +140,13 @@ def judge_enhancement_type(input_df, reflect_dict):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # parser.add_argument('--input_file', type=str, help='input_file', default='../data/金融产品前十大持仓_加入产品总资产_221116.csv')
-    parser.add_argument('--input_file', type=str, help='input_file', default='../data/金融产品投资组合明细_22年三季报_230105_手动修改.csv')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data/bank_wealth_product_01_16.csv')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230309_2.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/09/30')
     args = parser.parse_args()
 
-    all_data_df = pd.read_csv(args.all_data_file, encoding='gbk')
+    df = pd.read_csv(args.input_file)
+    all_data_df = pd.read_csv(args.all_data_file)
     statistics_date = args.statistics_date
 
     reflect_dict = dict()
@@ -163,8 +158,6 @@ if __name__ == '__main__':
         reflect_dict[i] = '权益类'
     for i in fixed_income_list:
         reflect_dict[i] = '固收类'
-
-    df = pd.read_csv(args.input_file)
 
     # 前处理
     df = df_preprocess(df, all_data_df, statistics_date)

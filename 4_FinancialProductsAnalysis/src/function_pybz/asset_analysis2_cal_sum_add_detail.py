@@ -2,6 +2,8 @@
 """
     固收+/大类资产统计分析步骤二：计算各个理财产品大类资产的配比情况
 """
+import copy
+
 import pandas as pd
 import numpy as np
 import argparse
@@ -24,24 +26,24 @@ class AssetManagementDataType(Enum):
 
 # #测试阶段使用# 统计归类后的各细分资产之和与'合计'是否一致
 def compare_first_asset_sum_with_total(input_df, proportion_dict, use_data_col_name):
-    if len(input_df[(input_df['AssetName'] == '合计')]) > 0:
-        total = input_df[(input_df['AssetName'] == '合计')][use_data_col_name].iloc[0]
+    if len(input_df[(input_df['primary_type_chi'] == '合计')]) > 0:
+        total = input_df[(input_df['primary_type_chi'] == '合计')][use_data_col_name].iloc[0]
         if abs(sum(proportion_dict.values()) - total) > 0.01:
             print(input_df['FinProCode'].iloc[0])
             print(proportion_dict)
 
 
-def compare_second_asset_sum_with_total(input_df, first_asset_proportion_dict, second_asset_proportion_dict, use_data_col_name):
-    test_dict = second_asset_proportion_dict.copy()
-    supplement_type_list = ['混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']
-    for type in supplement_type_list:
-        test_dict[type] = first_asset_proportion_dict[type]
-    if len(input_df[(input_df['AssetName'] == '合计')]) > 0:
-        total = input_df[(input_df['AssetName'] == '合计')][use_data_col_name].iloc[0]
-        if abs(sum(test_dict.values()) - total) > 0.01:
-            print(input_df['FinProCode'].iloc[0])
-            print(test_dict)
-            print('总和:{}'.format(sum(test_dict.values())))
+# def compare_second_asset_sum_with_total(input_df, first_asset_proportion_dict, second_asset_proportion_dict, use_data_col_name):
+#     test_dict = second_asset_proportion_dict.copy()
+#     supplement_type_list = ['混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']
+#     for type in supplement_type_list:
+#         test_dict[type] = first_asset_proportion_dict[type]
+#     if len(input_df[(input_df['primary_type_chi'] == '合计')]) > 0:
+#         total = input_df[(input_df['primary_type_chi'] == '合计')][use_data_col_name].iloc[0]
+#         if abs(sum(test_dict.values()) - total) > 0.01:
+#             print(input_df['FinProCode'].iloc[0])
+#             print(test_dict)
+#             print('总和:{}'.format(sum(test_dict.values())))
 
 
 def proportion_normalization(proportion_dict):
@@ -52,97 +54,29 @@ def proportion_normalization(proportion_dict):
 
 
 # 统计大类资产情况
-def cal_first_asset_proportion(input_df, col_name, fixedIncomeDataType, assetManagementDataType):
+def cal_first_asset_proportion(input_df, col_name):
     # 资产比例记录
-    first_asset = {"固收": 0, "资管产品": 0, "混合类": 0, "QDII": 0, "其他": 0, "权益类": 0, "商品及衍生品": 0, "非标资产": 0}
+    first_asset = {"货币市场类": 0, "固收": 0, "资管产品": 0, "QDII": 0, "其他": 0, "权益类": 0, "商品及衍生品": 0}
 
-    # 统计固定收益类资产占比
-    if fixedIncomeDataType == FixedIncomeDataType.onlyFirstLevel:
-        first_asset['固收'] = input_df[(input_df['大类资产'] == '固定收益类')][col_name].sum()
-    elif fixedIncomeDataType == FixedIncomeDataType.onlySecondLevel or fixedIncomeDataType == FixedIncomeDataType.bothFirstSecond:
-        for idx, row in input_df.iterrows():
-            if row['大类资产'] == '固定收益类' and row['详细大类资产'] != '固定收益类' and not np.isnan(row[col_name]):
-                first_asset['固收'] += row[col_name]
-    # 针对上银和交银需要单独处理
-    elif fixedIncomeDataType == FixedIncomeDataType.shangYinOrJiaoYinOrMinShengOrBeiYin:
-        for idx, row in input_df.iterrows():
-            if row['大类资产'] == '固定收益类':
-                first_asset['固收'] += row[col_name]
-
-    # 统计资管产品资产占比
-    if assetManagementDataType == AssetManagementDataType.onlyOne or assetManagementDataType == AssetManagementDataType.aboveOneFundNumOne:
-        first_asset['资管产品'] = input_df[(input_df['大类资产'] == '资管产品')][col_name].sum()
-    elif assetManagementDataType == AssetManagementDataType.aboveOneFundNumAboveOne:
-        # 有两个资管产品:公募基金时，只取相对小的一个（即求和后减去大的那个）
-        first_asset['资管产品'] = input_df[(input_df['大类资产'] == '资管产品')][col_name].sum() - input_df[(input_df['详细大类资产'] == '资管产品:公募基金')][col_name].max()
-
-    # 统计混合类资产占比，该类资产一般只有一个
-    first_asset['混合类'] = input_df[(input_df['大类资产'] == '混合类')][col_name].sum()
-
-    # 统计境外投资资产占比，该类资产一般只有一个
-    first_asset['QDII'] = input_df[(input_df['大类资产'] == '境外投资资产')][col_name].sum()
-
-    # 统计其他资产占比。该类资产需要求和
-    first_asset['其他'] = input_df[(input_df['大类资产'] == '其他资产')][col_name].sum()
-
-    # 统计权益资产占比，该类资产匹配出多个时，只取一个
-    if len(input_df[(input_df['大类资产'] == '权益类')]) > 0:
-        first_asset['权益类'] = input_df[(input_df['大类资产'] == '权益类')][col_name].iloc[0]
-
-    # 统计商品及金融衍生品资产占比，该类资产匹配出多个时，只取一个
-    if len(input_df[(input_df['大类资产'] == '商品及金融衍生品类')]) > 0:
-        first_asset['商品及衍生品'] = input_df[(input_df['大类资产'] == '商品及金融衍生品类')][col_name].iloc[0]
-
-    # 统计非标资产占比
-    first_asset['非标资产'] = input_df[(input_df['大类资产'] == '非标资产')][col_name].sum()
+    first_asset['货币市场类'] = input_df[(input_df['大类资产'] == '货币市场类')][col_name].sum()
+    first_asset['固收'] = input_df[(input_df['大类资产'] == '固定收益类')][col_name].sum()
+    first_asset['资管产品'] = input_df[(input_df['大类资产'] == '资管产品')][col_name].sum()
+    first_asset['QDII'] = input_df[(input_df['大类资产'] == 'QDII')][col_name].sum()
+    first_asset['其他'] = input_df[(input_df['大类资产'] == '其他')][col_name].sum()
+    first_asset['权益类'] = input_df[(input_df['大类资产'] == '权益类')][col_name].sum()
+    first_asset['商品及衍生品'] = input_df[(input_df['大类资产'] == '商品及衍生品')][col_name].sum()
 
     return first_asset
 
 
 # 统计细分类资产情况
-def cal_second_asset_proportion(input_df, col_name, first_asset_proportion_dict, fixedIncomeDataType):
-    first_asset_list = ['混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']
-    second_asset_list = ['固定收益类:货币类', '固定收益类:债券类', '固定收益类:资产支持证券',
-                         '资管产品:私募资管产品/信托计划/计划类资产', '资管产品:委外投资']
-
-    # 资产比例记录
+def cal_second_asset_proportion(input_df, col_name, reflect_classify_set):
     second_asset_dict = dict()
-
-    # 不能穿透的一级资产直接copy
-    for asset in first_asset_list:
-        second_asset_dict[asset] = first_asset_proportion_dict[asset]
-
-    # 可穿透的资产统计
-    for asset in second_asset_list:
-        second_asset_dict[asset] = input_df[(input_df['详细大类资产'] == asset)][col_name].sum()
-
-    # 统计资管产品:公募基金占比，该类资产匹配出多个时，只取一个
-    if len(input_df[(input_df['详细大类资产'] == '资管产品:公募基金')]) > 0:
-        second_asset_dict['资管产品:公募基金'] = input_df[(input_df['详细大类资产'] == '资管产品:公募基金')][col_name].iloc[0]
-
-    # 统计未穿透的固定收益类资产占比
-    if fixedIncomeDataType == FixedIncomeDataType.onlyFirstLevel:
-        second_asset_dict['未穿透的固定'] = first_asset_proportion_dict['固收']
-    # 针对上银和交银需要单独处理
-    elif fixedIncomeDataType == FixedIncomeDataType.shangYinOrJiaoYinOrMinShengOrBeiYin and len(input_df[(input_df['大类资产'] == '固定收益类') & (input_df['详细大类资产'] == '固定收益类')][col_name]) > 0:
-        second_asset_dict['未穿透的固定'] = input_df[(input_df['大类资产'] == '固定收益类') & (input_df['详细大类资产'] == '固定收益类')][col_name].iloc[0]
-
-    # 统计资管产品资产占比
-    second_asset_dict['未穿透的资管产品'] = input_df[(input_df['大类资产'] == '资管产品') & (input_df['详细大类资产'] == '资管产品')][col_name].sum()
+    for reflect_classify in reflect_classify_set:
+        first_asset, second_asset = reflect_classify.split(':')
+        second_asset_dict[reflect_classify] = input_df[(input_df['大类资产'] == first_asset) & (input_df['详细大类资产'] == second_asset)][col_name].sum()
 
     return second_asset_dict
-
-
-def preprocessing(input_df):
-    # 按 半年度投资管理报告、季度投资管理报告、定期报告 的顺序，选取一份报告做后续处理
-    if len(input_df[(input_df['InfoSource'] == '半年度投资管理报告')]) > 0:
-        input_df = input_df[(input_df['InfoSource'] == '半年度投资管理报告')]
-    elif len(input_df[(input_df['InfoSource'] == '季度投资管理报告')]) > 0:
-        input_df = input_df[(input_df['InfoSource'] == '季度投资管理报告')]
-    elif len(input_df[(input_df['InfoSource'] == '定期报告')]) > 0:
-        input_df = input_df[(input_df['InfoSource'] == '定期报告')]
-
-    return input_df
 
 
 def judge_enhance_type(proportion_dict, product_name):
@@ -166,70 +100,53 @@ def judge_enhance_type(proportion_dict, product_name):
         return 'None'
 
 
-def judge_enhancement_type(input_df):
-    # 前处理
-    input_df = preprocessing(input_df)
-    if input_df.shape[0] == 0:
-        return
+def cal_asset_ratio_by_filed(input_df, used_filed, output_dict, reflect_classify_set):
+    input_df = input_df.copy()
 
-    output_dict = dict(input_df.iloc[0])
-    del output_dict['Unnamed: 0'], output_dict['AssetTypeCode'], output_dict['AssetName'], output_dict['MarketValue'],\
-        output_dict['RatioInNV'], output_dict['详细大类资产'], output_dict['大类资产'], output_dict['RatioInTotalAsset']
-    product_name = output_dict['ChiName']
-
-    fixedIncomeDataType = None
-    # 固定收益类数据情况分类
-    # 是否有固收一级分类（即'固定收益类'）
-    # 非标准化债权其实当做一个一级分类
-    if input_df.iloc[0]['AgentName'] == '上银理财有限责任公司' or input_df.iloc[0]['AgentName'] == '交银理财有限责任公司' \
-            or input_df.iloc[0]['AgentName'] == '民生理财有限责任公司' or input_df.iloc[0]['AgentName'] == '北银理财有限责任公司':
-        fixedIncomeDataType = FixedIncomeDataType.shangYinOrJiaoYinOrMinShengOrBeiYin
-    else:
-        if len(input_df[(input_df['详细大类资产'] == '固定收益类')]) > 0:
-            fixedIncomeDataType = FixedIncomeDataType.onlyFirstLevel
-            for detail in input_df['详细大类资产']:
-                if detail.startswith('固定收益类:') and detail != '固定收益类:非标准化债权类':
-                    fixedIncomeDataType = FixedIncomeDataType.bothFirstSecond
-        else:
-            fixedIncomeDataType = FixedIncomeDataType.noFixedIncome
-            for detail in input_df['详细大类资产']:
-                if detail.startswith('固定收益类:') and detail != '固定收益类:非标准化债权类':
-                    fixedIncomeDataType = FixedIncomeDataType.onlySecondLevel
-
-    # 资管产品数据情况分类
-    if len(input_df[(input_df['大类资产'] == '资管产品')]) == 0:
-        assetManagementDataType = AssetManagementDataType.noAssetManagement
-    elif len(input_df[(input_df['大类资产'] == '资管产品')]) == 1:
-        assetManagementDataType = AssetManagementDataType.onlyOne
-    else:
-        if len(input_df[(input_df['详细大类资产'] == '资管产品:公募基金')]) <= 1:
-            assetManagementDataType = AssetManagementDataType.aboveOneFundNumOne
-        else:
-            assetManagementDataType = AssetManagementDataType.aboveOneFundNumAboveOne
-
-    # 若RatioInTotalAsset字段均为空 且 RatioInNV 字段有值，RatioInNV，否则使用RatioInTotalAsset
-    if input_df['RatioInTotalAsset'].count() == 0 and input_df['RatioInNV'].count() > 0:
-        use_data_col_name = 'RatioInNV'
-    else:
-        use_data_col_name = 'RatioInTotalAsset'
-
-    first_asset_proportion_dict = cal_first_asset_proportion(input_df, use_data_col_name, fixedIncomeDataType,
-                                                 assetManagementDataType)
-    second_asset_proportion_dict = cal_second_asset_proportion(input_df, use_data_col_name, first_asset_proportion_dict,
-                                                               fixedIncomeDataType)
+    first_asset_proportion_dict = cal_first_asset_proportion(input_df, used_filed)
+    second_asset_proportion_dict = cal_second_asset_proportion(input_df, used_filed, reflect_classify_set)
 
     # # #测试使用# 数据验证
-    compare_first_asset_sum_with_total(input_df, first_asset_proportion_dict, use_data_col_name)
-    compare_second_asset_sum_with_total(input_df, first_asset_proportion_dict, second_asset_proportion_dict, use_data_col_name)
+    compare_first_asset_sum_with_total(input_df, first_asset_proportion_dict, used_filed)
+    compare_first_asset_sum_with_total(input_df, second_asset_proportion_dict, used_filed)
 
     # 数据归一化
     first_asset_proportion_norm_dict = proportion_normalization(first_asset_proportion_dict)
     second_asset_proportion_norm_dict = proportion_normalization(second_asset_proportion_dict)
 
     output_dict.update(first_asset_proportion_norm_dict)
-    output_dict['enhance_type_asset'] = judge_enhance_type(first_asset_proportion_norm_dict, product_name)
     output_dict.update(second_asset_proportion_norm_dict)
-    return output_dict
+
+
+def cal_asset_ratio(input_df, reflect_classify_set):
+    if input_df.shape[0] == 0:
+        return
+
+    output_dict = dict(input_df.iloc[0])
+
+    del output_dict['product_code'], output_dict['AssetValue'], output_dict['product_type_chi'], output_dict['primary_type_chi'], output_dict['secondary_type_chi'], \
+        output_dict['direct_scale'], output_dict['direct_proportion'], output_dict['direct_proportion_cal_myself'], \
+        output_dict['actual_scale'], output_dict['actual_proportion'], output_dict['actual_proportion_cal_myself'],\
+        output_dict['actual_proportion_type_chi'], output_dict['data_type_chi']
+
+    before_penetration_dict = copy.deepcopy(output_dict)
+    after_penetration_dict = copy.deepcopy(output_dict)
+
+    # 穿透后的数据，若actual_proportion字段均为空 且 actual_proportion_cal_myself 字段有值，actual_proportion_cal_myself，actual_proportion
+    if input_df['direct_proportion'].count() == 0 and input_df['direct_proportion_cal_myself'].count() > 0:
+        use_data_col_name = 'direct_proportion_cal_myself'
+    else:
+        use_data_col_name = 'direct_proportion'
+    cal_asset_ratio_by_filed(input_df, use_data_col_name, before_penetration_dict, reflect_classify_set)
+
+    # 穿透后的数据，若actual_proportion字段均为空 且 actual_proportion_cal_myself 字段有值，actual_proportion_cal_myself，actual_proportion
+    if input_df['actual_proportion'].count() == 0 and input_df['actual_proportion_cal_myself'].count() > 0:
+        use_data_col_name = 'actual_proportion_cal_myself'
+    else:
+        use_data_col_name = 'actual_proportion'
+    cal_asset_ratio_by_filed(input_df, use_data_col_name, after_penetration_dict, reflect_classify_set)
+
+    return before_penetration_dict, after_penetration_dict
 
 
 def add_final_enhancement_type(input_df):
@@ -247,28 +164,44 @@ def add_final_enhancement_type(input_df):
     return input_df
 
 
+# 获取资产一二级类目的映射关系
+def get_reflect_classify_set(input_df):
+    reflect_set = set()
+    for idx, row in input_df.iterrows():
+        reflect_set.add(row['映射后一级类目'] + ':' + row['映射后二级类目'] )
+    reflect_set.remove('合计:合计')
+    return reflect_set
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表_分类后.xlsx')
-    parser.add_argument('--target_file', type=str, help='target_file', default='../data/bank_wealth_product_12_22.csv')
-    parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data/系列名称对应_22三季报_221222.xlsx')
-    parser.add_argument('--top10_file', type=str, help='input_file', default='前十大持仓固收增强分析.xlsx')
+    parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表映射后.xlsx')
+    parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
+    parser.add_argument('--target_file', type=str, help='target_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    # parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='产品非标投资规模统计.xlsx')
+    parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data_pybz/out5.xlsx')
     args = parser.parse_args()
 
+    # non_standard_sum_df = pd.read_excel(args.non_standard_file)
     df = pd.read_excel(args.input_file)
-    top10_df = pd.read_excel(args.top10_file)
+    reflect_df = pd.read_excel(args.reflect_file, sheet_name='资产配置表映射关系')
+
+    # 获取映射后资产set
+    reflect_classify_set = get_reflect_classify_set(reflect_df)
 
     grouped = df.groupby('FinProCode')
 
-    output_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'InfoPublDate', 'InfoSource', 'enhance_type_asset',
-                                      '固收', '资管产品', '混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产'])
-
+    # 穿透前后数据分别统计
+    before_penetration_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'enhance_type_asset',
+                                      '货币市场类', '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品'])
+    after_penetration_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'enhance_type_asset',
+                                      '货币市场类', '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品'])
     # 固收+产品分类
     index = 0
     for group_name in list(grouped.groups.keys()):
-        res_dict = judge_enhancement_type(grouped.get_group(group_name))
-        # print(res_dict)
-        output_df = output_df.append(res_dict, ignore_index=True)
+        before_penetration_dict, after_penetration_dict = cal_asset_ratio(grouped.get_group(group_name), reflect_classify_set)
+        before_penetration_df = before_penetration_df.append(before_penetration_dict, ignore_index=True)
+        after_penetration_df = after_penetration_df.append(after_penetration_dict, ignore_index=True)
         index += 1
         if index % 1000 == 0:
             print(index)
@@ -277,18 +210,24 @@ if __name__ == '__main__':
     series_name_df = pd.read_excel(args.series_name_file)
     series_name_df['set_name'] = series_name_df['set'].apply(lambda x: x.split('-')[0])
 
-    output_df = pd.merge(output_df, series_name_df[['FinProCode', 'set_name']], how='left', on=['FinProCode'])
-    output_df = pd.merge(output_df, top10_df[['FinProCode', 'enhance_type_top10']], how='left', on=['FinProCode'])
-    output_df = add_final_enhancement_type(output_df)
+    before_penetration_df = pd.merge(before_penetration_df, series_name_df[['FinProCode', 'set_name']], how='left', on=['FinProCode'])
+    after_penetration_df = pd.merge(after_penetration_df, series_name_df[['FinProCode', 'set_name']], how='left', on=['FinProCode'])
 
-    output_df.to_excel('固收增强分类结果.xlsx')
+    first_asset = {"货币市场类": 0, "固收": 0, "资管产品": 0, "QDII": 0, "其他": 0, "权益类": 0, "商品及衍生品": 0}
+    second_asset_dict = {"QDII": 0, "其他": 0, "商品及衍生品": 0, "债券类": 0, "非标准化债权类资产": 0, "公募基金": 0,
+                         "私募/信托/保险产品": 0, "委外投资": 0, "股权": 0, "股票": 0, "现金及银行存款": 0, "同业存单": 0, "拆放同业及买入返售": 0}
 
     target_df = pd.read_csv(args.target_file, encoding="utf-8", error_bad_lines=False)
-    res_df = pd.merge(target_df, output_df[['FinProCode', 'set_name', 'InfoSource', 'enhance_type_asset', 'enhance_type_top10',
-                                            'enhance_type', '固收', '资管产品', '混合类',
-                                            'QDII', '其他', '权益类', '商品及衍生品', '非标资产', "固定收益类:货币类",
-                                            "固定收益类:债券类", "固定收益类:资产支持证券", "资管产品:公募基金",
-                                            "资管产品:私募资管产品/信托计划/计划类资产", "资管产品:委外投资", "未穿透的固定", "未穿透的资管产品"]], how='left', on=['FinProCode'])
-    res_df.to_excel('合并结果.xlsx')
+
+    before_penetration_df = pd.merge(target_df, before_penetration_df, how='left', on=['FinProCode'])
+    after_penetration_df = pd.merge(target_df, after_penetration_df, how='left', on=['FinProCode'])
+
+    output_column_list = ['FinProCode', 'set_name', "货币市场类", '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品']
+    output_column_list = output_column_list + list(reflect_classify_set)
+
+    before_penetration_df = pd.merge(target_df, before_penetration_df[output_column_list], how='left', on=['FinProCode'])
+    after_penetration_df = pd.merge(target_df, after_penetration_df[output_column_list], how='left', on=['FinProCode'])
+    before_penetration_df.to_excel('穿透前资产投资比例统计.xlsx')
+    after_penetration_df.to_excel('穿透后资产投资比例统计.xlsx')
 
 

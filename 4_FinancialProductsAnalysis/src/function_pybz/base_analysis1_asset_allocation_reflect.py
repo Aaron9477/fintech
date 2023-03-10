@@ -48,21 +48,45 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     return input_df
 
 
+# 统计理财产品在非标资产的总投资比例
+def cal_non_standard_asset_sum(input_df):
+    grouped = input_df.groupby(['FinProCode']).agg({'proportion_of_product': sum, 'proportion_of_product_cal_myself': sum})
+    proportion_of_product_list = list(grouped['proportion_of_product'].items())
+    proportion_of_product_cal_myself_list = list(grouped['proportion_of_product_cal_myself'].items())
+    res_list = []
+    for i in range(len(proportion_of_product_list)):
+        res_list.append([proportion_of_product_list[i][0], proportion_of_product_list[i][1], proportion_of_product_cal_myself_list[i][1]])
+
+    col_name = ['FinProCode', 'proportion_of_product_sum', 'proportion_of_product_cal_myself_sum']
+    df_res = pd.DataFrame(data=res_list, columns=col_name)
+
+    df_res['non_std_asset_ratio'] = np.where(df_res['proportion_of_product_sum'].isnull(),
+                                             df_res['proportion_of_product_sum'], df_res['proportion_of_product_cal_myself_sum'])
+
+    return df_res[['FinProCode', 'non_std_asset_ratio']]
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
     parser.add_argument('--raw_asset_file', type=str, help='raw_asset_file', default='../data_pybz/pybz_金融产品资产配置_22年三季报_230309.csv')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230309.csv')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/9/30')
 
     args = parser.parse_args()
     reflect_file = args.reflect_file
     raw_asset_file = args.raw_asset_file
+    non_standard_file = args.non_standard_file
     statistics_date = args.statistics_date
 
     reflect_df = pd.read_excel(reflect_file, sheet_name='资产配置表映射关系')
-    raw_asset_data = pd.read_csv(raw_asset_file)
+    try:
+        raw_asset_data = pd.read_csv(raw_asset_file)
+    except:
+        raw_asset_data = pd.read_csv(raw_asset_file, encoding='gbk')
     all_data_df = pd.read_csv(args.all_data_file)
+    non_standard_df = pd.read_csv(args.non_standard_file)
 
     # 映射关系
     primary_reflact_dict, secondary_reflact_dict = get_reflect_dict(reflect_df)
@@ -82,6 +106,9 @@ if __name__ == '__main__':
 
     raw_asset_data.to_excel('金融产品资产配置表映射后.xlsx')
 
+    # 统计产品非标投资比例
+    non_standard_sum_df = cal_non_standard_asset_sum(non_standard_df)
+    non_standard_sum_df.to_excel('产品非标投资规模统计.xlsx')
 
 
 

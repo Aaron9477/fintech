@@ -137,7 +137,6 @@ def judge_enhance_type(input):
 
 
 def cal_asset_allocation_ratio(input_df):
-    # 前处理
     if input_df.shape[0] == 0:
         return
 

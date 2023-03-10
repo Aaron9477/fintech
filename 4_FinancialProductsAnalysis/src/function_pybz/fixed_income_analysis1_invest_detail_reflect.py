@@ -9,43 +9,7 @@ Created on Tue Dec 01 17:20:45 2022
 import pandas as pd
 import numpy as np
 import argparse
-from func import choose_report_detail_table, choose_penetration_data, choose_product_mother_son, get_product_exist
-
-
-# # 分类方法：固收+定义为投资了权益类、商品、衍生品类、基金、理财产品/信托计划及资产管理计划的固收类产品
-
-name_set = set()
-
-supplement_type_list = ['混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']
-
-# FCC0000001T8-固定收益类、FCC0000001WN-标准化债权资产、FCC0000001WL-债券、
-# FCC000001DY1-固定收益类：其他资产、FCC0000014T8-可转债、FCC0000001WQ-资产支持证券
-fixed_income_list = ["FCC0000001T8", "FCC0000001WN", "FCC0000001WL", "FCC000001DY1", "FCC0000014T8", "FCC0000001WQ"]
-
-# FCC0000001X6-金融衍生品、FCC000000YHQ-期货、FCC000000HEP-权证、FCC00000139U-期权、FCC000001DY3-商品及金融衍生品类：其他资产、FCC000000SO6-远期外汇合约
-product_derivatives_list = ["FCC0000001X6", "FCC000000YHQ", "FCC000000HEP", "FCC00000139U", "FCC000001DY3", 'FCC000000SO6', ]
-
-# FCC0000001T9-权益类、FCC0000001WJ-股票、FCC000001DY2-权益类：其他资产、FCC000001DXY-优先股、FCC000000YHP-港股
-equity_list = ["FCC0000001T9", "FCC0000001WJ", "FCC000001DY2", "FCC000001DXY", 'FCC000000YHP']
-
-# CFN000000274-理财产品/信托计划及资产管理计划(1114个)、CBS000000028-其他资产(6202个)(以资产管理计划为主)
-# CFN0000001CB-基金(130个)、FCC000001DY0-商品类基金、FCC000001DXZ-权益类基金、FCC0000014SB-债券基金、
-fund_asset_management_list = ["CFN000000274", "CBS000000028", "CFN0000001CB", "FCC000001DY0", "FCC000001DXZ",
-                              "FCC0000014SB", ]
-
-# FCC0000001X3-现金类资产、CFN0000002OC-回购及逆回购、FCC0000013BX-高流动性资产(611个)
-cash_type_list = ["FCC0000001X3", "CFN0000002OC", "FCC0000013BX"]
-
-# FCC000001CN5-权益类和商品及金融衍生品类、FCC000001CN7-固定收益类和商品及金融衍生品类、FCC000001CN6-固定收益类和资管产品(327个)
-blend_list = ["FCC000001CN5", "FCC000001CN7", "FCC000001CN6", ]
-
-# FCC0000001WO-非标准化债权资产
-non_standardized_assets = ["FCC0000001WO", ]
-
-# CBS00000000K-买入返售金融资产(1个)、CFN000000ADG-股票质押式回购(0个)、FCC000000076-股权(0个)
-other_list = ["CBS00000000K", "CFN000000ADG", ]
-
-# QDII_list = []
+from func import choose_product_mother_son, get_product_exist
 
 
 # 获取资产一二级类目的映射关系
@@ -100,11 +64,6 @@ def judge_enhancement_type(input_df):
     if input_df.shape[0] == 0:
         return
     output_dict = dict(input_df.iloc[0])
-    # del output_dict['product_code'], output_dict['product_sum_scale'], output_dict['product_type_chi'], output_dict['asset_rank'], output_dict['asset_name'], \
-    #     output_dict['asset_scale'], output_dict['actual_proportion'], output_dict['actual_proportion_cal_myself'], \
-    #     output_dict['actual_proportion_type_chi'], output_dict['primary_type_chi'], output_dict['secondary_type_chi'],\
-    #     output_dict['three_level_type'], output_dict['sh_code'], output_dict['sz_code'], output_dict['other_generic_code'], \
-    #     output_dict['comprehensive_code'], output_dict['data_type_chi']
 
     del output_dict['product_code'], output_dict['MarketValue'], output_dict['product_type_chi'], output_dict['asset_rank'], output_dict['SecuName'], \
         output_dict['AssetValue'], output_dict['actual_proportion'], output_dict['actual_proportion_cal_myself'], \
@@ -163,14 +122,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
     parser.add_argument('--top10_file', type=str, help='top10_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230309_2.csv')
-    parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230309.csv')
+    parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='产品非标投资规模统计.xlsx')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/9/30')
     args = parser.parse_args()
 
     reflect_df = pd.read_excel(args.reflect_file, sheet_name='前10大持仓表映射关系')
     top10_df = pd.read_csv(args.top10_file)
-    non_standard_df = pd.read_csv(args.non_standard_file)
+    non_standard_sum_df = pd.read_excel(args.non_standard_file)
     all_data_df = pd.read_csv(args.all_data_file)
     statistics_date = args.statistics_date
 
@@ -179,9 +138,6 @@ if __name__ == '__main__':
 
     # 理财产品前处理
     top10_df = df_preprocess(top10_df, all_data_df, statistics_date)
-
-    # 统计产品非标投资比例
-    non_standard_sum_df = cal_non_standard_asset_sum(non_standard_df)
 
     # 统计大类资产映射表不能覆盖的字段
     asset_name_not_in_dict = dict()
