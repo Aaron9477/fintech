@@ -7,6 +7,7 @@ import numpy as np
 import argparse
 import datetime
 import copy
+from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
 
 
 def cal_fixed_income_enhance_type(input_df, company_asset_sum):
@@ -79,10 +80,9 @@ def cal_fixed_income_company_ratio(input_df):
     return pd.DataFrame(res_list)
 
 
-def cal_asset_ratio(input_df, company_asset_sum):
+# 统计各类型资产的规模和占比
+def cal_asset_scale_and_ratio(input_df, company_asset_sum, asset_list):
     output_dict = {"资产规模": dict(), "资产占比": dict()}
-    asset_list = ['非标资产', '固定收益类:货币类', '固定收益类:债券类', '固定收益类:资产支持证券', '资管产品:公募基金', '资管产品:私募资管产品/信托计划/计划类资产',
-                  '资管产品:委外投资', '混合类', 'QDII', '权益类', '商品及衍生品', '其他', "未穿透的固定", "未穿透的资管产品"]
     for asset in asset_list:
         output_dict["资产规模"][asset] = (input_df[asset] * input_df['AssetValue']).sum()
         if company_asset_sum != 0:
@@ -94,7 +94,6 @@ def cal_asset_ratio(input_df, company_asset_sum):
 
 def cal_outsourcing_ratio(input_df):
     output_dict = {"委外（明确披露）": dict(), "委外（估算）": dict()}
-    # outsourcing_list = ['资管产品:私募资管产品/信托计划/计划类资产', '资管产品:委外投资']
     investment_type_list = ['现金管理类', '固定收益类', '混合类', '权益类', '商品及衍生品类']
 
     for investment_type in investment_type_list:
@@ -103,8 +102,8 @@ def cal_outsourcing_ratio(input_df):
             output_dict["委外（明确披露）"][investment_type] = (input_df[(input_df['InvestmentType'] == investment_type)]['资管产品:委外投资']
                                                         * input_df[(input_df['InvestmentType'] == investment_type)]['AssetValue']).sum() / investment_type_asset_sum
             output_dict["委外（估算）"][investment_type] = output_dict["委外（明确披露）"][investment_type] \
-                                                     + ((input_df[(input_df['InvestmentType'] == investment_type)]['资管产品:私募资管产品/信托计划/计划类资产'] +
-                                                         input_df[(input_df['InvestmentType'] == investment_type)]['未穿透的资管产品'])
+                                                     + ((input_df[(input_df['InvestmentType'] == investment_type)]["资管产品:私募/信托/保险产品"] +
+                                                         input_df[(input_df['InvestmentType'] == investment_type)]['资管产品:未公布投资细类'])
                                                         * input_df[(input_df['InvestmentType'] == investment_type)]['AssetValue']).sum() / investment_type_asset_sum
         else:
             output_dict["委外（明确披露）"][investment_type] = 0
@@ -113,8 +112,8 @@ def cal_outsourcing_ratio(input_df):
     company_asset_sum = input_df['AssetValue'].sum()
     if company_asset_sum != 0:
         output_dict["委外（明确披露）"]['全部'] = (input_df['资管产品:委外投资'] * input_df['AssetValue']).sum() / company_asset_sum
-        output_dict["委外（估算）"]['全部'] = output_dict["委外（明确披露）"]['全部'] + ((input_df['资管产品:私募资管产品/信托计划/计划类资产'] +
-                                                                        input_df['未穿透的资管产品']) * input_df['AssetValue']).sum() / company_asset_sum
+        output_dict["委外（估算）"]['全部'] = output_dict["委外（明确披露）"]['全部'] + ((input_df['资管产品:私募/信托/保险产品'] +
+                                                                        input_df['资管产品:未公布投资细类']) * input_df['AssetValue']).sum() / company_asset_sum
     else:
         output_dict["委外（明确披露）"]['全部'] = 0
         output_dict["委外（估算）"]['全部'] = 0
@@ -139,72 +138,40 @@ def get_before_enddate(x):
     return False
 
 
-def get_main_product_ind(data_set_RegistrationCode):
-    ProductTypes = data_set_RegistrationCode['ProductType']
-    tags = ['母产品', '产品', '子产品']
-    for tag in tags:
-        if tag in ProductTypes.values:
-            return ProductTypes[ProductTypes == tag].index[0]
+def preprocess(input_df, statistics_date):
+    # 筛选存续期产品
+    input_df = get_product_exist(input_df, statistics_date)
 
+    def get_main_product_ind(data_set_RegistrationCode):
+        ProductTypes = data_set_RegistrationCode['ProductType']
+        tags = ['母产品', '产品', '子产品']
+        for tag in tags:
+            if tag in ProductTypes.values:
+                return ProductTypes[ProductTypes == tag].index[0]
 
-def preprocess(input_df):
-    # 识别现金管理类产品
-    input_df.loc[input_df['inv_type'] == 1, 'InvestmentType'] = '现金管理类'
-
-    # 过滤过期产品
-    input_df = input_df[input_df['ActMaturityDate'].apply(lambda x: get_not_before_enddate(x))]
-    input_df = input_df[input_df['product_establish_date'].apply(lambda x: get_before_enddate(x))]
-    input_df = input_df[(input_df['enhance_type'].notnull()) &
-        ((input_df['OperationType'] == '开放式净值型') | (input_df['OperationType'] == '封闭式净值型'))]
-
+    # 筛选子产品 all_data_df
     RegistrationCodes = list(set(input_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
     for RegistrationCode in RegistrationCodes[:]:
         data_set_RegistrationCode = input_df[input_df['RegistrationCode'] == RegistrationCode]
+        data_set_RegistrationCode = data_set_RegistrationCode.sort_values(by=['AssetValue'], ascending=False)
+        if len(data_set_RegistrationCode.dropna(subset=['AssetValue']).index) > 0:
+            data_set_RegistrationCode = data_set_RegistrationCode.dropna(subset=['AssetValue'])
         RegistrationCode_mainind.append(get_main_product_ind(data_set_RegistrationCode))
     output_df = input_df[input_df.index.isin(RegistrationCode_mainind)]
 
     return output_df
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='合并结果.xlsx')
-    parser.add_argument('--output_file', type=str, help='output_file', default='固收+分类_大类资产穿透_委外分析.xlsx')
-    args = parser.parse_args()
-
-    output_file = args.output_file
-    df = pd.read_excel(args.input_file)
-
-    # 前处理
-    df = preprocess(df)
-
-    grouped = df.groupby('CompanyName')
-
-    enhance_type_res_list = []
-    outsourcing_res_list = []
-    asset_res_dict = {"全部": [], "现金管理类": [], "固定收益类": [], "混合类": [], "权益类": [], "商品及衍生品类": [], }
-    # asset_res_list = []
-
-
-    fix_income_company_ratio = cal_fixed_income_company_ratio(df)
-
-    # TODO:该部分代码写得过于杂乱后续修改
-    # 定义存储数据的dict
-    asset_name_reflect_dict = {'未穿透的固定': '固定收益类:未公布投资细类', '未穿透的资管产品': '资管产品:未公布投资细类',
-                               '非标资产': '固定收益类:非标债权资产', '资管产品:私募资管产品/信托计划/计划类资产': '资管产品:私募/信托产品'}
-    asset_list = ['非标资产', '固定收益类:货币类', '固定收益类:债券类', '固定收益类:资产支持证券', '资管产品:公募基金', '资管产品:私募资管产品/信托计划/计划类资产',
-                  '资管产品:委外投资', '混合类', 'QDII', '权益类', '商品及衍生品', '其他', "未穿透的固定", "未穿透的资管产品"]
+# 定义各产品类型统计各类型资产 投资规模and比例 的dict
+def define_product_asset_dict(asset_list, investment_type_list):
+    # 定义各产品类型，需要统计的资产类别
     asset_sum_dict = dict()
     asset_ratio_dict = dict()
     for asset in asset_list:
         # 名称拆分
-        asset_origin_name = asset_name_reflect_dict[asset] if asset in asset_name_reflect_dict.keys() else asset
-        asset_origin_name_list = asset_origin_name.split(':')
-        if len(asset_origin_name_list) == 1:
-            asset_name_first, asset_name_second = asset_origin_name, asset_origin_name
-        else:
-            asset_name_first, asset_name_second = asset_origin_name_list[0], asset_origin_name_list[1]
+        asset_origin_name_list = asset.split(':')
+        asset_name_first, asset_name_second = asset_origin_name_list[0], asset_origin_name_list[1]
         if asset_name_first not in asset_sum_dict.keys():
             asset_sum_dict[asset_name_first] = dict()
         if asset_name_first not in asset_ratio_dict.keys():
@@ -212,52 +179,64 @@ if __name__ == '__main__':
         asset_sum_dict[asset_name_first][asset_name_second] = []
         asset_ratio_dict[asset_name_first][asset_name_second] = []
 
-    # 为每种产品类型定义存储资产的dict
-    investment_type_list = ['现金管理类', '固定收益类', '混合类', '权益类', '商品及衍生品类', '全部']
-    asset_sum_dict_dict = dict()
-    asset_ratio_dict_dict = dict()
+    # 每种产品类型
+    product_asset_scale_dict = dict()
+    product_asset_ratio_dict = dict()
     for investment_type in investment_type_list:
         # 浅拷贝只能拷贝根目录，必须要深拷贝
-        asset_sum_dict_dict[investment_type] = copy.deepcopy(asset_sum_dict)
-        asset_ratio_dict_dict[investment_type] = copy.deepcopy(asset_ratio_dict)
+        product_asset_scale_dict[investment_type] = copy.deepcopy(asset_sum_dict)
+        product_asset_ratio_dict[investment_type] = copy.deepcopy(asset_ratio_dict)
+
+    return product_asset_scale_dict, product_asset_ratio_dict
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--input_file', type=str, help='input_file', default='穿透前资产投资比例统计.xlsx')
+    parser.add_argument('--output_file', type=str, help='output_file', default='穿透前大类资产_委外分析.xlsx')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/9/30')
+    args = parser.parse_args()
+
+    output_file = args.output_file
+    statistics_date = args.statistics_date
+    df = pd.read_excel(args.input_file)
+
+    # 前处理
+    df = preprocess(df, statistics_date)
+
+    # 定义存储最终结果的dict
+    outsourcing_res_list = []
+    asset_res_dict = {"全部": [], "现金管理类": [], "固定收益类": [], "混合类": [], "权益类": [], "商品及衍生品类": []}
+
+    # 资产类别集合
+    asset_list = ['货币市场类:现金及银行存款', '货币市场类:同业存单', '货币市场类:拆放同业及买入返售', '货币市场类:未公布投资细类',
+                  '固定收益类:债券类', '固定收益类:非标准化债权类资产', '固定收益类:未公布投资细类', '权益类:股票', '权益类:股权',
+                  '权益类:未公布投资细类', 'QDII:QDII', '商品及衍生品:商品及衍生品', '资管产品:公募基金', "资管产品:委外投资",
+                  "资管产品:私募/信托/保险产品", '资管产品:未公布投资细类', '其他:其他']
+    # 产品类型集合
+    investment_type_list = ['现金管理类', '固定收益类', '混合类', '权益类', '商品及衍生品类', '全部']
+
+    # 定义各产品类型统计各类型资产 投资规模and比例 的dict
+    product_asset_scale_dict, product_asset_ratio_dict = define_product_asset_dict(asset_list, investment_type_list)
 
     # 按公司遍历
+    grouped = df.groupby('CompanyName')
     for group_name in list(grouped.groups.keys()):
-        # # 上银和交银当前策略不支持，先过滤掉
-        # if group_name == '上银理财有限责任公司' or group_name == '交银理财有限责任公司':
-        #     continue
-
         company_df = grouped.get_group(group_name)
 
         # 计算公司总资产
         company_asset_sum = company_df['AssetValue'].sum()
-        company_fixed_income_sum = company_df[(company_df['InvestmentType'] == '固定收益类')]['AssetValue'].sum()
 
         # 过滤掉没有资产的公司
         if company_asset_sum == 0:
             continue
 
-        # # 固收增强结果统计
-        # 统计 非现金固收类 的资产量和占比
-        fixed_income_enhance_type = cal_fixed_income_enhance_type(company_df, company_fixed_income_sum)
-        # 名称映射关系字典
-        fixed_income_name_reflect_dict = {'纯固收': '固收（纯债）', '非标资产': '固收增强（非标）', 'QDII': '固收增强（QDII）', '权益类': '固收增强（权益）',
-                                          '商品及衍生品': '固收增强（衍生品）', 'FOF增强': '固收增强（FOF）', '其他': '固收增强（其他）'}
-        # 原名称，使用字典映射为新名称
-        fixed_income_enhance_type_list = ['纯固收', '非标资产', 'QDII', '权益类', '商品及衍生品', 'FOF增强', '其他']
-        # 输出固收增强
-        for enhance_type in fixed_income_enhance_type_list:
-            tmp_dict = {'公司名称': group_name, '产品类别': fixed_income_name_reflect_dict[enhance_type], '固收类产品总规模': company_fixed_income_sum}
-            for data_type in fixed_income_enhance_type.keys():
-                tmp_dict[data_type] = fixed_income_enhance_type[data_type][enhance_type]
-            enhance_type_res_list.append(tmp_dict)
-
         # # 委外分析结果统计
         # 统计 委外 的资产量和占比
         outsourcing_ratio = cal_outsourcing_ratio(company_df)
         investment_type_reflect_dict = {'固定收益类': '固定收益类（非现金）'}
-        investment_type_list = ['现金管理类', '固定收益类', '混合类', '权益类', '商品及衍生品类', '全部']
         for investment_type in investment_type_list:
+            # 对'固定收益类'改名字为'固定收益类（非现金）'
             investment_name = investment_type_reflect_dict[investment_type] if investment_type in investment_type_reflect_dict.keys() else investment_type
             tmp_dict = {'公司名称': group_name, '产品类别': investment_name, '公布财报总产品规模': company_asset_sum}
 
@@ -275,58 +254,55 @@ if __name__ == '__main__':
             else:
                 category_df = company_df[(company_df['InvestmentType'] == category_type)]
             category_asset_sum = category_df['AssetValue'].sum()
-            asset_ratio = cal_asset_ratio(category_df, category_asset_sum)
+
+            # 统计该产品类型各类资产占比
+            asset_scale_and_ratio = cal_asset_scale_and_ratio(category_df, category_asset_sum, asset_list)
 
             # 提取asset_ratio中的结果，并按指定名称存储
-            asset_name_reflect_dict = {'未穿透的固定': '固定收益类:未公布投资细类', '未穿透的资管产品': '资管产品:未公布投资细类',
-                                       '非标资产': '固定收益类:非标债权资产', '资管产品:私募资管产品/信托计划/计划类资产': '资管产品:私募/信托产品'}
-            asset_list = ['非标资产', '固定收益类:货币类', '固定收益类:债券类', '固定收益类:资产支持证券', '资管产品:公募基金', '资管产品:私募资管产品/信托计划/计划类资产',
-                          '资管产品:委外投资', '混合类', 'QDII', '权益类', '商品及衍生品', '其他', "未穿透的固定", "未穿透的资管产品"]
             for asset in asset_list:
                 # 名称拆分
-                asset_origin_name = asset_name_reflect_dict[asset] if asset in asset_name_reflect_dict.keys() else asset
-                asset_origin_name_list = asset_origin_name.split(':')
-                if len(asset_origin_name_list) == 1:
-                    asset_name_first, asset_name_second = asset_origin_name, asset_origin_name
-                else:
-                    asset_name_first, asset_name_second = asset_origin_name_list[0], asset_origin_name_list[1]
+                asset_origin_name_list = asset.split(':')
+                asset_name_first, asset_name_second = asset_origin_name_list[0], asset_origin_name_list[1]
 
-                tmp_dict = {'公司名称': group_name, '资产大类': asset_name_first, '资产细类': asset_name_second, '公布财报总产品规模': company_asset_sum}
-                for data_type in asset_ratio.keys():
-                    tmp_dict[data_type] = asset_ratio[data_type][asset]
+                tmp_dict = {'公司名称': group_name, '资产大类': asset_name_first, '资产细类': asset_name_second,
+                            '公布财报总产品规模': company_asset_sum}
+                for data_type in asset_scale_and_ratio.keys():
+                    tmp_dict[data_type] = asset_scale_and_ratio[data_type][asset]
 
                 asset_res_dict[category_type].append(tmp_dict)
 
                 # 记录有披露的公司资产规模/资产占比，存储方式为asset_sum_dict[产品类型][一级资产][二级资产]
                 # 未穿透的资产包含未披露的公司
-                if asset_ratio['资产规模'][asset] > 0 or asset.startswith('未穿透的'):
-                    asset_sum_dict_dict[category_type][asset_name_first][asset_name_second].append(asset_ratio['资产规模'][asset])
-                if asset_ratio['资产占比'][asset] > 0 or asset.startswith('未穿透的'):
-                    asset_ratio_dict_dict[category_type][asset_name_first][asset_name_second].append(asset_ratio['资产占比'][asset])
+                if asset_scale_and_ratio['资产规模'][asset] > 0 or asset.startswith('未穿透的'):
+                    product_asset_scale_dict[category_type][asset_name_first][asset_name_second].append(asset_scale_and_ratio['资产规模'][asset])
+                if asset_scale_and_ratio['资产占比'][asset] > 0 or asset.startswith('未穿透的'):
+                    product_asset_ratio_dict[category_type][asset_name_first][asset_name_second].append(asset_scale_and_ratio['资产占比'][asset])
+
+    # 大类资产补充均值 只对有该类资产的公司统计均值
+    for category_type in asset_res_dict.keys():
+        for asset_res in asset_res_dict[category_type]:
+            asset_name_first = asset_res['资产大类']
+            asset_name_second = asset_res['资产细类']
+            if asset_name_first in product_asset_scale_dict[category_type].keys() and asset_name_second in product_asset_scale_dict[category_type][asset_name_first].keys():
+                # 有大于一家公司有该类资产
+                if len(product_asset_scale_dict[category_type][asset_name_first][asset_name_second]) > 0:
+                    asset_res['有披露的公司资产规模均值'] = sum(product_asset_scale_dict[category_type][asset_name_first][asset_name_second]) / len(product_asset_scale_dict[category_type][asset_name_first][asset_name_second])
 
     # 大类资产补充均值 只补充有披露公司的均值
     for category_type in asset_res_dict.keys():
         for asset_res in asset_res_dict[category_type]:
             asset_name_first = asset_res['资产大类']
             asset_name_second = asset_res['资产细类']
-            if asset_name_first in asset_sum_dict_dict[category_type].keys() and asset_name_second in asset_sum_dict_dict[category_type][asset_name_first].keys():
+            if asset_name_first in product_asset_ratio_dict[category_type].keys() and asset_name_second in product_asset_ratio_dict[category_type][asset_name_first].keys():
                 # 有大于一家公司有该类资产
-                if len(asset_sum_dict_dict[category_type][asset_name_first][asset_name_second]) > 0:
-                    asset_res['有披露的公司资产规模均值'] = sum(asset_sum_dict_dict[category_type][asset_name_first][asset_name_second]) / len(asset_sum_dict_dict[category_type][asset_name_first][asset_name_second])
-
-    # 大类资产补充均值 只补充有披露公司的均值
-    for category_type in asset_res_dict.keys():
-        for asset_res in asset_res_dict[category_type]:
-            asset_name_first = asset_res['资产大类']
-            asset_name_second = asset_res['资产细类']
-            if asset_name_first in asset_ratio_dict_dict[category_type].keys() and asset_name_second in asset_ratio_dict_dict[category_type][asset_name_first].keys():
-                # 有大于一家公司有该类资产
-                if len(asset_ratio_dict_dict[category_type][asset_name_first][asset_name_second]) > 0:
-                    asset_res['有披露的公司资产占比均值'] = sum(asset_ratio_dict_dict[category_type][asset_name_first][asset_name_second]) / len(asset_ratio_dict_dict[category_type][asset_name_first][asset_name_second])
+                if len(product_asset_ratio_dict[category_type][asset_name_first][asset_name_second]) > 0:
+                    asset_res['有披露的公司资产占比均值'] = sum(product_asset_ratio_dict[category_type][asset_name_first][asset_name_second]) / len(product_asset_ratio_dict[category_type][asset_name_first][asset_name_second])
 
     # 大类资产排序
-    asset_order = {'固定收益类': ['货币类', '债券类', '资产支持证券', '非标债权资产', '未公布投资细类'], '权益类': ['权益类'], '混合类': ['混合类'],
-                   '商品及衍生品': ['商品及衍生品'], 'QDII': ['QDII'], '资管产品': ['公募基金', '委外投资', '私募/信托产品', '未公布投资细类'], '其他': ['其他']}
+    asset_order = {'货币市场类': ['现金及银行存款', '同业存单', '拆放同业及买入返售', '未公布投资细类'],
+                   '固定收益类': ['债券类', '非标准化债权类资产', '未公布投资细类'], '权益类': ['股票', '股权', '未公布投资细类'],
+                   'QDII': ['QDII'], '商品及衍生品': ['商品及衍生品'], '资管产品': ['公募基金', '委外投资', '私募/信托/保险产品', '未公布投资细类'],
+                   '其他': ['其他']}
     for category_type in asset_res_dict.keys():
         for asset_res in asset_res_dict[category_type]:
             first_asset_index = 0
@@ -342,7 +318,6 @@ if __name__ == '__main__':
             asset_res['资产大类序号'] = first_asset_index
             asset_res['资产细类序号'] = second_asset_index
 
-    enhance_type_res_df = pd.DataFrame(enhance_type_res_list).merge(fix_income_company_ratio, how='left', on=['公司名称', '产品类别'])
     outsourcing_res_list_df = pd.DataFrame(outsourcing_res_list)
     asset_res_list_final = []
     for category_type in asset_res_dict.keys():
@@ -354,7 +329,6 @@ if __name__ == '__main__':
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
 
     writer = pd.ExcelWriter(output_file)
-    enhance_type_res_df.to_excel(writer, sheet_name='固收增强分类')
     asset_res_list_df.to_excel(writer, sheet_name='大类资产穿透')
     outsourcing_res_list_df.to_excel(writer, sheet_name='委外分析')
     writer.save()
