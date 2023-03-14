@@ -137,23 +137,6 @@ def get_product_exist(input, statistics_date):
 
 # 债券分析数据前处理
 def bond_analysis_df_preprocess(input_df):
-    # 筛选条件：1、债券与资产支持证券 2、标准化资产 3、过滤代码为空的数据
-    output_df = input_df[((input_df['InvestObject'] == 'FCC0000001WL') | (input_df['InvestObject'] == 'FCC0000001WQ'))
-                         & (input_df['IfNonStandardAssets'] != 'FCC000000005') & (input_df['SecuCode'].notnull())]
+    # 筛选条件：债券
+    output_df = input_df[(input_df['secondary_type_chi'] == '债券') & (input_df['SecuCode'].notnull())]
     return output_df
-
-
-# 债券分析获取债券代码
-def bond_analysis_code_preprocess(input_list):
-    fund_list = []
-    res_list_IB = []
-    res_list_SH = []
-    res_list_SZ = []
-    for x in input_list:
-        x = str(x)
-        x = x.split('.')[0].split(' ')[0]
-        fund_list.append(x)
-        res_list_IB.append(x + '.IB')
-        res_list_SH.append(x + '.SH')
-        res_list_SZ.append(x + '.SZ')
-    return fund_list, res_list_IB, res_list_SH, res_list_SZ

@@ -192,8 +192,8 @@ def define_product_asset_dict(asset_list, investment_type_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='穿透前资产投资比例统计.xlsx')
-    parser.add_argument('--output_file', type=str, help='output_file', default='穿透前大类资产_委外分析.xlsx')
+    parser.add_argument('--input_file', type=str, help='input_file', default='穿透后资产投资比例统计.xlsx')
+    parser.add_argument('--output_file', type=str, help='output_file', default='大类资产_委外分析.xlsx')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/9/30')
     args = parser.parse_args()
 
@@ -205,7 +205,6 @@ if __name__ == '__main__':
     df = preprocess(df, statistics_date)
 
     # 定义存储最终结果的dict
-    outsourcing_res_list = []
     asset_res_dict = {"全部": [], "现金管理类": [], "固定收益类": [], "混合类": [], "权益类": [], "商品及衍生品类": []}
 
     # 资产类别集合
@@ -231,19 +230,6 @@ if __name__ == '__main__':
         if company_asset_sum == 0:
             continue
 
-        # # 委外分析结果统计
-        # 统计 委外 的资产量和占比
-        outsourcing_ratio = cal_outsourcing_ratio(company_df)
-        investment_type_reflect_dict = {'固定收益类': '固定收益类（非现金）'}
-        for investment_type in investment_type_list:
-            # 对'固定收益类'改名字为'固定收益类（非现金）'
-            investment_name = investment_type_reflect_dict[investment_type] if investment_type in investment_type_reflect_dict.keys() else investment_type
-            tmp_dict = {'公司名称': group_name, '产品类别': investment_name, '公布财报总产品规模': company_asset_sum}
-
-            for data_type in outsourcing_ratio.keys():
-                tmp_dict[data_type] = outsourcing_ratio[data_type][investment_type]
-            outsourcing_res_list.append(tmp_dict)
-
         # 大类资产穿透结果导出
         # 统计 大类资产 的资产量和占比
         asset_ratio_category = dict()
@@ -258,7 +244,7 @@ if __name__ == '__main__':
             # 统计该产品类型各类资产占比
             asset_scale_and_ratio = cal_asset_scale_and_ratio(category_df, category_asset_sum, asset_list)
 
-            # 提取asset_ratio中的结果，并按指定名称存储
+            # 提取asset_scale_and_ratio中的结果，并按指定名称存储
             for asset in asset_list:
                 # 名称拆分
                 asset_origin_name_list = asset.split(':')
@@ -271,11 +257,11 @@ if __name__ == '__main__':
 
                 asset_res_dict[category_type].append(tmp_dict)
 
-                # 记录有披露的公司资产规模/资产占比，存储方式为asset_sum_dict[产品类型][一级资产][二级资产]
-                # 未穿透的资产包含未披露的公司
-                if asset_scale_and_ratio['资产规模'][asset] > 0 or asset.startswith('未穿透的'):
+                # 记录有披露的公司资产规模/资产占比，存储方式为asset_sum_dict[产品类型][一级资产][二级资产]，用于统计规模和占比的均值
+                # 未公布投资细类的资产，即使公司没投，也去计算均值，所以此处会记录。其他类的资产只对>0的统计均值
+                if asset_scale_and_ratio['资产规模'][asset] > 0 or asset.endswith('未公布投资细类'):
                     product_asset_scale_dict[category_type][asset_name_first][asset_name_second].append(asset_scale_and_ratio['资产规模'][asset])
-                if asset_scale_and_ratio['资产占比'][asset] > 0 or asset.startswith('未穿透的'):
+                if asset_scale_and_ratio['资产占比'][asset] > 0 or asset.endswith('未公布投资细类'):
                     product_asset_ratio_dict[category_type][asset_name_first][asset_name_second].append(asset_scale_and_ratio['资产占比'][asset])
 
     # 大类资产补充均值 只对有该类资产的公司统计均值
@@ -318,7 +304,6 @@ if __name__ == '__main__':
             asset_res['资产大类序号'] = first_asset_index
             asset_res['资产细类序号'] = second_asset_index
 
-    outsourcing_res_list_df = pd.DataFrame(outsourcing_res_list)
     asset_res_list_final = []
     for category_type in asset_res_dict.keys():
         for asset_res in asset_res_dict[category_type]:
@@ -328,7 +313,6 @@ if __name__ == '__main__':
             asset_res_list_final.append(asset_res)
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
 
-    writer = pd.ExcelWriter(output_file)
-    asset_res_list_df.to_excel(writer, sheet_name='大类资产穿透')
-    outsourcing_res_list_df.to_excel(writer, sheet_name='委外分析')
+    writer = pd.ExcelWriter(output_file, engine="openpyxl", mode='a')
+    asset_res_list_df.to_excel(writer, sheet_name='资产配置穿透后分析')
     writer.save()

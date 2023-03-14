@@ -40,14 +40,12 @@ def df_preprocess(input_df, all_data_df, statistics_date):
         RegistrationCode_mainind.append(get_main_product_ind(data_set_RegistrationCode))
     all_data_df = all_data_df[all_data_df.index.isin(RegistrationCode_mainind)]
 
-    output_df = output_df.merge(all_data_df, how='inner', left_on='cp_id', right_on='FinProCode')
+    output_df = output_df.merge(all_data_df, how='inner', on='FinProCode')
 
     # 筛选公募基金
     output_df = output_df[(output_df['primary_type_chi'] == '基金') & (output_df['secondary_type_chi'] == '公募基金')]
 
     # 合并基金代码，筛选代码非空的基金
-    output_df['SecuCode'] = np.where(output_df['other_generic_code'].isnull(),
-                                     (np.where(output_df['sz_code'].isnull(), output_df['sh_code'], output_df['sz_code'])), output_df['other_generic_code'])
     output_df = output_df[(output_df['SecuCode'].notnull())]
 
     # 筛选存续期产品
@@ -85,13 +83,12 @@ def split_list_average_n(origin_list, n):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/09/30')
-    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230224.csv')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230309_2.csv')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
     df = pd.read_csv(args.input_file)
-
     all_data_df = pd.read_csv(args.all_data_file)[['FinProCode', 'MaturityDate',
                                                    'product_establish_date', 'RegistrationCode', 'ProductType']]
 
