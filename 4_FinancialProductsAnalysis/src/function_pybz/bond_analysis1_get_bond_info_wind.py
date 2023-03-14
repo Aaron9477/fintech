@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # parser.add_argument('--input_file', type=str, help='input_file', default='../data/资产明细_221216.csv')
     parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230309_2.csv')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/09/30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     parser.add_argument('--output_file', type=str, help='output_file', default='债券信息.xlsx')
     args = parser.parse_args()
 

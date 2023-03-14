@@ -8,8 +8,7 @@ from WindPy import w
 import pandas as pd
 import numpy as np
 import argparse
-import datetime
-from func import bond_analysis_code_preprocess, bond_analysis_df_preprocess
+
 
 target_feature = ["maturitydate", "bduration", "sduration", "sprdura_cnbd", "calc_mduration"]
 feature_name = ['到期日期', '基准久期', '利差久期', '估值利差久期(中债)', '修正久期']

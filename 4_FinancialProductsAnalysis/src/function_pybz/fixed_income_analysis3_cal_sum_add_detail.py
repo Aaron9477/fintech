@@ -209,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data_pybz/out5.xlsx')
     parser.add_argument('--top10_file', type=str, help='top10_file', default='前十大持仓固收增强分析.xlsx')
     parser.add_argument('--fund_whether_has_equity_file', type=str, help='fund_whether_has_equity_file', default='资产明细是否有含权基金_基于基金持仓.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/09/30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 
     all_data_df = pd.read_csv(args.all_data_file)

@@ -21,7 +21,6 @@ target_feature = ["name_official", "fund_corp_fundmanagementcompany", "fund_firs
 feature_name = ['基金简称', '基金公司', '基金一级分类', '基金二级分类', '一年回报', '二年回报', '三年回报', '五年回报']
 
 
-
 def df_preprocess(input_df, all_data_df, statistics_date):
     def get_main_product_ind(data_set_RegistrationCode):
         ProductTypes = data_set_RegistrationCode['ProductType']
@@ -70,19 +69,9 @@ def split_list_average_n(origin_list, n):
         yield origin_list[i:i + n]
 
 
-# def get_fund_type(row):
-#     fund_id = row['SecuCode'] if row['SecuCode'].endswith('.OF') else row['SecuCode'] + '.OF'
-#
-#     # w.wsd("000312.OF", "name_official,fund_corp_fundmanagementcompany,fund_firstinvesttype,fund_investtype,return_1y,return_2y,return_3y,return_5y,style_marketvaluestyleattribute", "2022-11-16", "2022-11-16", "annualized=0;PriceAdj=F")
-#     res = w.wsd(fund_id, "fund_firstinvesttype,fund_investtype", "2022-11-16", "2022-11-16", "PriceAdj=F")
-#     print(res)
-#
-#     return res.Data[0][0], res.Data[1][0]
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/09/30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230309_2.csv')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
     args = parser.parse_args()

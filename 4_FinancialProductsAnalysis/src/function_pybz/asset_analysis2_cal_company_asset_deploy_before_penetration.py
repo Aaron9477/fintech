@@ -7,7 +7,7 @@ import numpy as np
 import argparse
 import datetime
 import copy
-from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
+from func import get_product_exist
 
 
 def cal_fixed_income_enhance_type(input_df, company_asset_sum):
@@ -192,9 +192,9 @@ def define_product_asset_dict(asset_list, investment_type_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='穿透后资产投资比例统计.xlsx')
+    parser.add_argument('--input_file', type=str, help='input_file', default='穿透前资产投资比例统计.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='大类资产_委外分析.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/9/30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 
     output_file = args.output_file
@@ -205,6 +205,7 @@ if __name__ == '__main__':
     df = preprocess(df, statistics_date)
 
     # 定义存储最终结果的dict
+    outsourcing_res_list = []
     asset_res_dict = {"全部": [], "现金管理类": [], "固定收益类": [], "混合类": [], "权益类": [], "商品及衍生品类": []}
 
     # 资产类别集合
@@ -229,6 +230,19 @@ if __name__ == '__main__':
         # 过滤掉没有资产的公司
         if company_asset_sum == 0:
             continue
+
+        # # 委外分析结果统计
+        # 统计 委外 的资产量和占比
+        outsourcing_ratio = cal_outsourcing_ratio(company_df)
+        investment_type_reflect_dict = {'固定收益类': '固定收益类（非现金）'}
+        for investment_type in investment_type_list:
+            # 对'固定收益类'改名字为'固定收益类（非现金）'
+            investment_name = investment_type_reflect_dict[investment_type] if investment_type in investment_type_reflect_dict.keys() else investment_type
+            tmp_dict = {'公司名称': group_name, '产品类别': investment_name, '公布财报总产品规模': company_asset_sum}
+
+            for data_type in outsourcing_ratio.keys():
+                tmp_dict[data_type] = outsourcing_ratio[data_type][investment_type]
+            outsourcing_res_list.append(tmp_dict)
 
         # 大类资产穿透结果导出
         # 统计 大类资产 的资产量和占比
@@ -304,6 +318,7 @@ if __name__ == '__main__':
             asset_res['资产大类序号'] = first_asset_index
             asset_res['资产细类序号'] = second_asset_index
 
+    outsourcing_res_list_df = pd.DataFrame(outsourcing_res_list)
     asset_res_list_final = []
     for category_type in asset_res_dict.keys():
         for asset_res in asset_res_dict[category_type]:
@@ -313,6 +328,7 @@ if __name__ == '__main__':
             asset_res_list_final.append(asset_res)
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
 
-    writer = pd.ExcelWriter(output_file, engine="openpyxl", mode='a')
-    asset_res_list_df.to_excel(writer, sheet_name='资产配置穿透后分析')
+    writer = pd.ExcelWriter(output_file)
+    asset_res_list_df.to_excel(writer, sheet_name='资产配置穿透前分析')
+    outsourcing_res_list_df.to_excel(writer, sheet_name='委外分析')
     writer.save()

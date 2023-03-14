@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 import argparse
-from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
+from func import choose_product_mother_son, get_product_exist
 
 
 # primary_type_reflect_dict = {'代客境外理财投资qdii': 'QDII', '商品类': '商品及衍生品', '基金': '', '委外投资————协议方式': '资管产品',
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--raw_asset_file', type=str, help='raw_asset_file', default='../data_pybz/pybz_金融产品资产配置_22年三季报_230309.csv')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
     parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230309.csv')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/9/30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
 
     args = parser.parse_args()
     reflect_file = args.reflect_file

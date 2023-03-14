@@ -34,7 +34,7 @@ def code_preprocess(input_list):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--fund_data_file', type=str, help='fund_data_file', default='基金信息_2022_09_30.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022/09/30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     parser.add_argument('--output_file', type=str, help='output_file', default='资产明细是否有含权基金_基于基金持仓.xlsx')
     args = parser.parse_args()
 
