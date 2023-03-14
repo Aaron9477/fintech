@@ -121,7 +121,10 @@ def judge_enhance_type(input):
         # 未识别出固收增强的，判断是否是纯债还是无法判断
         if len(asset_list) == 0:
             # 固收投资>95% 或者 只投纯债类公募的产品基金+固收投资>95% 认为是纯债
-            if row['固收'] > 0.95 or (row['资产明细是否有含权基金'] == 0 and (row['固收'] + row['公募基金'] > 0.95)):
+            if row['固收'] > 0.95 or ((row['资产明细是否有含权基金'] == 0 or np.isnan(row['资产明细是否有含权基金'])) and (row['固收'] + row['公募基金'] > 0.95)):
+                enhance_type_list.append('纯债')
+            # 对投资其他类资产的，放宽要求
+            elif row['固收'] > 0.9 and (row['固收'] + row['其他'] > 0.95):
                 enhance_type_list.append('纯债')
             elif isinstance(row['固收'], str) or not np.isnan(row['固收']):
                 enhance_type_list.append('固收+(其他)')

@@ -58,12 +58,14 @@ def preprocess(input_df):
 # 对固收增强进行归类
 def fixed_income_type_reflect(input):
     input_df = input.copy()
+    # 对具体的固收增强产品做映射
+    # 注：固收+(其他)映射为固收增强（未披露）；固收+(其他)为投资了“其他”类资产的产品
     asset_name_reflect_dict = {'纯债': '固收（纯债）', '固收+(权益)': '固收增强（权益）', '固收+(非标)': '固收增强（非标）',
                                '固收+(权益,非标)': '固收增强（多资产）', '固收+(权益,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,非标)': '固收增强（多资产）',
                                '固收+(衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,衍生品)': '固收增强（多资产）', '固收+(QDII,衍生品)': '固收增强（多资产）',
                                '固收+(QDII,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,非标)': '固收增强（多资产）',
                                '固收+(衍生品)': '固收增强（衍生品）', '固收+(权益,衍生品)': '固收增强（衍生品）',
-                               '固收+(QDII)': '固收增强（QDII）', '固收+(QDII,权益)': '固收增强（QDII）', '固收+(其他)': '固收增强（资管）', '底层数据未披露': '固收增强（未披露）'}
+                               '固收+(QDII)': '固收增强（QDII）', '固收+(QDII,权益)': '固收增强（QDII）', '固收+(其他)': '固收增强（未披露）', '底层数据未披露': '固收增强（未披露）'}
     enhance_type = input_df['enhance_type_asset']
     enhance_type_reflect = [asset_name_reflect_dict[x] for x in enhance_type]
     input_df['enhance_type'] = enhance_type_reflect
@@ -82,7 +84,7 @@ if __name__ == '__main__':
 
     enhance_type_res_list = []
     fixed_income_enhance_type_list = ['固收（纯债）', '固收增强（权益）', '固收增强（非标）', '固收增强（多资产）', '固收增强（衍生品）',
-                                      '固收增强（QDII）', '固收增强（资管）', '固收增强（未披露）']
+                                      '固收增强（QDII）', '固收增强（未披露）']
     # 对固收增强类型进行归类
     df = fixed_income_type_reflect(df)
 

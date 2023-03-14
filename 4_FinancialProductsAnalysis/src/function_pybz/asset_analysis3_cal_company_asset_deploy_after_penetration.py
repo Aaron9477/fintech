@@ -193,7 +193,7 @@ def define_product_asset_dict(asset_list, investment_type_list):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='穿透后资产投资比例统计.xlsx')
-    parser.add_argument('--output_file', type=str, help='output_file', default='大类资产_委外分析.xlsx')
+    parser.add_argument('--output_file', type=str, help='output_file', default='大类资产统计_委外分析.xlsx')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 

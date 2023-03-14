@@ -121,7 +121,7 @@ def get_major_assets_detail(row, reflact_dict):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--top10_file', type=str, help='top10_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230309_2.csv')
+    parser.add_argument('--top10_file', type=str, help='top10_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
     parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='产品非标投资规模统计.xlsx')
     parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')

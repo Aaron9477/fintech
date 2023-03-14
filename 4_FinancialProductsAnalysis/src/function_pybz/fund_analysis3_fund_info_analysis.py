@@ -146,7 +146,7 @@ if __name__ == '__main__':
     # parser.add_argument('--input_file', type=str, help='input_file', default='基金信息_2021-12-31.xlsx')
     # parser.add_argument('--input_file', type=str, help='input_file', default='基金信息_2022-03-31.xlsx')
     # parser.add_argument('--input_file', type=str, help='input_file', default='基金信息_2022-06-30.xlsx')
-    parser.add_argument('--input_file', type=str, help='input_file', default='基金信息_2022_09_30.xlsx')
+    parser.add_argument('--input_file', type=str, help='input_file', default='基金信息_2022-09-30.xlsx')
     parser.add_argument('--all_data_file', type=str, help='input_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
     parser.add_argument('--score_file', type=str, help='input_file', default='全部基金量化打分排名.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财子重仓基金分析.xlsx')
