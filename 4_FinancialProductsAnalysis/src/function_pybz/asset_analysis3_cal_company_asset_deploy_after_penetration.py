@@ -7,7 +7,8 @@ import numpy as np
 import argparse
 import datetime
 import copy
-from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
+from func import get_product_exist
+import openpyxl
 
 
 def cal_fixed_income_enhance_type(input_df, company_asset_sum):
@@ -312,7 +313,18 @@ if __name__ == '__main__':
             asset_res['产品类型'] = category_type
             asset_res_list_final.append(asset_res)
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
+    asset_res_list_df['穿透类型'] = '穿透后'
+
+    # 接着穿透前的数据补充穿透后的，统一存到'资产配置统计分析'sheet中
+    final_df = pd.read_excel(args.output_file, sheet_name='资产配置统计分析')
+    final_df = pd.concat([final_df, asset_res_list_df])
+    final_df.drop(['Unnamed: 0'], axis=1, inplace=True)
+
+    wb = openpyxl.load_workbook(output_file)
+    ws = wb["资产配置统计分析"]
+    wb.remove(ws)
+    wb.save(output_file)
 
     writer = pd.ExcelWriter(output_file, engine="openpyxl", mode='a')
-    asset_res_list_df.to_excel(writer, sheet_name='资产配置穿透后分析')
+    final_df.to_excel(writer, sheet_name='资产配置统计分析')
     writer.save()

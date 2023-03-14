@@ -327,8 +327,9 @@ if __name__ == '__main__':
             asset_res['产品类型'] = category_type
             asset_res_list_final.append(asset_res)
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
+    asset_res_list_df['穿透类型'] = '穿透前'
 
     writer = pd.ExcelWriter(output_file)
-    asset_res_list_df.to_excel(writer, sheet_name='资产配置穿透前分析')
+    asset_res_list_df.to_excel(writer, sheet_name='资产配置统计分析')
     outsourcing_res_list_df.to_excel(writer, sheet_name='委外分析')
     writer.save()
