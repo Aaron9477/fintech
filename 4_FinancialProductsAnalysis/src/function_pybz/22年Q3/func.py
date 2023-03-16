@@ -140,14 +140,3 @@ def bond_analysis_df_preprocess(input_df):
     # 筛选条件：债券
     output_df = input_df[(input_df['secondary_type_chi'] == '债券') & (input_df['SecuCode'].notnull())]
     return output_df
-
-
-def get_trading_day(statistics_date):
-    if statistics_date == '2022-09-30':
-        trading_day = '2022-09-30'
-    elif statistics_date == '2022-12-31':
-        # 2022-12-31 不是交易日，所以使用2022-12-30去wind拉取数据
-        trading_day = '2023-01-03'
-    else:
-        raise ValueError
-    return trading_day

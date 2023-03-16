@@ -10,7 +10,8 @@ import copy
 
 
 if __name__ == '__main__':
-    df1 = pd.read_excel("../../基金信息_2022_09_30.xlsx")
+    # df1 = pd.read_excel("../../基金信息_2022-09-30.xlsx")
+    df1 = pd.read_excel("基金信息_2022-12-31.xlsx")
     df2 = pd.read_csv("中信建投公募基金自有分类20230306.csv", encoding='gb18030')
     df_res = df1.merge(df2, how="left", left_on="SecuCode", right_on="fund_code", )
 

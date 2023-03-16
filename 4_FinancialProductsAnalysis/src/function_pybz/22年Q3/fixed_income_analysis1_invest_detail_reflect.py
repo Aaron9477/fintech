@@ -121,26 +121,17 @@ def get_major_assets_detail(row, reflact_dict):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
+    parser.add_argument('--top10_file', type=str, help='top10_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
     parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='产品非标投资规模统计.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 
+    reflect_df = pd.read_excel(args.reflect_file, sheet_name='前10大持仓表映射关系')
+    top10_df = pd.read_csv(args.top10_file)
+    non_standard_sum_df = pd.read_excel(args.non_standard_file)
+    all_data_df = pd.read_csv(args.all_data_file)
     statistics_date = args.statistics_date
-    reflect_file = args.reflect_file
-    non_standard_file = args.non_standard_file
-    if args.statistics_date == '2022-09-30':
-        top10_file = '../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        top10_file = '../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-    else:
-        raise ValueError
-
-    reflect_df = pd.read_excel(reflect_file, sheet_name='前10大持仓表映射关系')
-    top10_df = pd.read_csv(top10_file)
-    all_data_df = pd.read_csv(all_data_file)
-    non_standard_sum_df = pd.read_excel(non_standard_file)
 
     # 映射关系
     reflact_dict = get_reflect_dict(reflect_df)

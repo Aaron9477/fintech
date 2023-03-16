@@ -207,32 +207,20 @@ def get_asset_allocation_ratio(input):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
     parser.add_argument('--asset_allocation_file', type=str, help='asset_allocation_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data_pybz/out5.xlsx')
     parser.add_argument('--top10_file', type=str, help='top10_file', default='前十大持仓固收增强分析.xlsx')
     parser.add_argument('--fund_whether_has_equity_file', type=str, help='fund_whether_has_equity_file', default='资产明细是否有含权基金_基于基金持仓.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 
-    asset_allocation_file = args.asset_allocation_file
-    series_name_file = args.series_name_file
-    top10_file = args.top10_file
-    fund_whether_has_equity_file = args.fund_whether_has_equity_file
+    all_data_df = pd.read_csv(args.all_data_file)
+    asset_allocation_df = pd.read_excel(args.asset_allocation_file)
+    series_name_df = pd.read_excel(args.series_name_file)
+    top10_df = pd.read_excel(args.top10_file)
+    fund_whether_has_equity_df = pd.read_excel(args.fund_whether_has_equity_file)
     statistics_date = args.statistics_date
-
-    if args.statistics_date == '2022-09-30':
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-    else:
-        raise ValueError
-
-    all_data_df = pd.read_csv(all_data_file)
-    asset_allocation_df = pd.read_excel(asset_allocation_file)
-    series_name_df = pd.read_excel(series_name_file)
-    top10_df = pd.read_excel(top10_file)
-    fund_whether_has_equity_df = pd.read_excel(fund_whether_has_equity_file)
 
     # 计算理财产品资产配置表投资产的比例
     asset_allocation_ratio_df = get_asset_allocation_ratio(asset_allocation_df)

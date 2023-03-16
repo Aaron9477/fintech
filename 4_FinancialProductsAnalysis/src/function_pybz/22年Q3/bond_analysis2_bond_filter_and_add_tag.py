@@ -185,21 +185,13 @@ def mix_up_bond_name_with_report_name(input):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     parser.add_argument('--input_file', type=str, help='input_file', default='债券信息.xlsx')
+    parser.add_argument('--investment_details_file', type=str, help='investment_details_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财子债券打标签.xlsx')
     args = parser.parse_args()
-
     input_file = args.input_file
+    investment_details_file = args.investment_details_file
     output_file = args.output_file
-    statistics_date = args.statistics_date
-
-    if args.statistics_date == '2022-09-30':
-        investment_details_file = '../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-    elif args.statistics_date == '2022-12-31':
-        investment_details_file = '../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-    else:
-        raise ValueError
 
     writer = pd.ExcelWriter(output_file)
     df = pd.read_excel(input_file)

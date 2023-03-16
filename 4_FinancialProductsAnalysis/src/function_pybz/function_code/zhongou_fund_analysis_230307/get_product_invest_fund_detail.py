@@ -53,22 +53,19 @@ def df_preprocess(input_df, statistics_date):
     output_df = output_df[output_df.index.isin(RegistrationCode_mainind)]
 
     # 筛选存续期产品
-    ActMaturityDate = list(output_df['ActMaturityDate'])
-    ProductMaturityDate = list(output_df['ProductMaturityDate'])
-    for i in range(len(ProductMaturityDate)):
-        if not isinstance(ActMaturityDate[i], str) and np.isnan(ActMaturityDate[i]):
-            ActMaturityDate[i] = ProductMaturityDate[i]
-    output_df['ActMaturityDate'] = ActMaturityDate
-    output_df = output_df[(output_df['ActMaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
+    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
 
     return output_df
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='../../基金信息_2022-09-30.xlsx')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data/bank_wealth_product_01_06.csv')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../../基金信息_2022-12-31.xlsx')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data_pybz/pyjy_bank_wealth_product_0306.csv')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    # parser.add_argument('--input_file', type=str, help='input_file', default='../../22年Q3/基金信息_2022-09-30.xlsx')
+    # parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data/pyjy_bank_wealth_product_0930.csv')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 
     all_data_df = pd.read_csv(args.all_data_file)
@@ -77,6 +74,7 @@ if __name__ == '__main__':
     all_data_df.rename(columns={'AssetValue': 'AssetValue_new'}, inplace=True)
 
     df = pd.read_excel(args.input_file)
+    # df.drop(['AgentName'], axis=1, inplace=True)
     df = df.merge(all_data_df, how='left', on='FinProCode')
 
     EndDate_list = list(df['EndDate_y'])
@@ -99,15 +97,6 @@ if __name__ == '__main__':
                        '基金一级分类': 'wind一级分类', '基金二级分类': 'wind二级分类', 'MarketValue': '理财产品持有基金市值（万元）',
                        'AssetValue_new': '理财产品总资产（万元）', '一年回报': '基金近一年收益', '二年回报': '基金近二年收益',
                        '三年回报': '基金近三年收益', '五年回报': '基金近五年收益'}, inplace=True)
-
-    company_list = list(df['理财公司'])
-    new_company_list = []
-    for i in range(len(company_list)):
-        if company_list[i] != '汇华理财有限公司':
-            new_company_list.append(company_list[i][:-6])
-        else:
-            new_company_list.append('汇华理财')
-    df['理财公司'] = new_company_list
 
     df['理财产品持有基金市值（万元）'] = df['理财产品持有基金市值（万元）'] / 10000
     df['理财产品持有基金总规模（万元）'] = df['理财产品持有基金总规模（万元）'] / 10000

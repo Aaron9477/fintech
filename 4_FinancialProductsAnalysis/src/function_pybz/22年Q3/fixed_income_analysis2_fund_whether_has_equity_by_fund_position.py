@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 import argparse
-from func import get_trading_day
+from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
 from WindPy import w
 
 
@@ -33,15 +33,14 @@ def code_preprocess(input_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--fund_data_file', type=str, help='fund_data_file', default='基金信息_2022-09-30.xlsx')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     parser.add_argument('--output_file', type=str, help='output_file', default='资产明细是否有含权基金_基于基金持仓.xlsx')
     args = parser.parse_args()
 
+    fund_data_file = args.fund_data_file
     statistics_date = args.statistics_date
     output_file = args.output_file
-    fund_data_file = '基金信息_{}.xlsx'.format(statistics_date)
-
-    trading_day = get_trading_day(statistics_date)
 
     fund_data_df = pd.read_excel(fund_data_file)
 
@@ -49,11 +48,8 @@ if __name__ == '__main__':
     fund_set = set(fund_list)
     fund_str = ','.join(fund_set)
 
-    # TODO: 22年Q4数据有问题，这里先用930的
-    trading_day = '2022-09-30'
-
     w.start()
-    wind_return = w.wsd(fund_str, "prt_stocktonav", trading_day, trading_day, "")
+    wind_return = w.wsd(fund_str, "prt_stocktonav", statistics_date, statistics_date, "")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
     fund_data_df['权益持仓占比'] = value_list

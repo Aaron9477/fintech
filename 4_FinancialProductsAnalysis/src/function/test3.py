@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
-from func import get_trading_day
+from func import choose_report_detail_table
 
 #显示所有的列
 pd.set_option('display.max_columns', None)
@@ -71,56 +71,28 @@ def split_list_average_n(origin_list, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--input_file', type=str, help='input_file', default='基金风格稳定度标签.xlsx')
     args = parser.parse_args()
 
-    statistics_date = args.statistics_date
+    df = pd.read_excel(args.input_file)
 
-    if args.statistics_date == '2022-09-30':
-        input_file = '../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        input_file = '../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-    else:
-        raise ValueError
-
-    trading_day = get_trading_day(statistics_date)
-
-    df = pd.read_csv(input_file)
-    all_data_df = pd.read_csv(all_data_file)[['FinProCode', 'MaturityDate',
-                                                   'product_establish_date', 'RegistrationCode', 'ProductType']]
-
-    # 前处理
-    df = df_preprocess(df, all_data_df, statistics_date)
-
-    fund_list = code_preprocess(df['SecuCode'].values)
-    fund_set = set(fund_list)
-    fund_str = ','.join(fund_set)
+    fund_list = df['证券代码'].values
+    fund_str = ','.join(fund_list)
 
     w.start()
     index = 0
-    for feat in target_feature:
-        wind_return = w.wsd(fund_str, feat, trading_day, trading_day, "annualized=0;PriceAdj=F")
-        fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
-        value_list = [fund_value_dict[x] for x in fund_list]
-        df[feature_name[index]] = value_list
-        index += 1
 
-    trading_day_before_1y = str(int(trading_day[:4])-1) + trading_day[4:]
-    wind_return = w.wsd(fund_str, "NAV_adj", trading_day_before_1y, trading_day_before_1y, "PriceAdj=F")
+    wind_return = w.wsd(fund_str, "fund_firstinvesttype", "2023-03-15", "2023-03-15", "")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
-    df['统计日一年前净值'] = value_list
+    df['wind一级分类'] = value_list
 
-    wind_return = w.wsd(fund_str, "NAV_adj", trading_day, trading_day, "PriceAdj=F")
+    wind_return = w.wsd(fund_str, "fund_investtype", "2023-03-15", "2023-03-15", "")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
-    df['统计日净值'] = value_list
+    df['wind二级分类'] = value_list
 
-    df['一年收益率'] = df['统计日净值'] / df['统计日一年前净值'] - 1
-
-    df.to_excel("基金信息_" + statistics_date + ".xlsx")
+    df.to_excel("羽洁姐文件收益统计.xlsx")
 
 
 

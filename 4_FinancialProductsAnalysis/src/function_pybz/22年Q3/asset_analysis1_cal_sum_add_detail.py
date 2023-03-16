@@ -185,17 +185,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
+    parser.add_argument('--target_file', type=str, help='target_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    # parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='产品非标投资规模统计.xlsx')
     parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data_pybz/out5.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     args = parser.parse_args()
 
-    if args.statistics_date == '2022-09-30':
-        target_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        target_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-    else:
-        raise ValueError
-
+    # non_standard_sum_df = pd.read_excel(args.non_standard_file)
     df = pd.read_excel(args.input_file)
     reflect_df = pd.read_excel(args.reflect_file, sheet_name='资产配置表映射关系')
 
@@ -209,7 +204,7 @@ if __name__ == '__main__':
                                       '货币市场类', '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品'])
     after_penetration_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'enhance_type_asset',
                                       '货币市场类', '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品'])
-    # 固收+产品分类
+    # 计算不同类型产品资产投资比例
     index = 0
     for group_name in list(grouped.groups.keys()):
         before_penetration_dict, after_penetration_dict = cal_asset_ratio(grouped.get_group(group_name), reflect_classify_set)
@@ -233,7 +228,7 @@ if __name__ == '__main__':
     second_asset_dict = {"QDII": 0, "其他": 0, "商品及衍生品": 0, "债券类": 0, "非标准化债权类资产": 0, "公募基金": 0,
                          "私募/信托/保险产品": 0, "委外投资": 0, "股权": 0, "股票": 0, "现金及银行存款": 0, "同业存单": 0, "拆放同业及买入返售": 0}
 
-    target_df = pd.read_csv(target_file, encoding="utf-8", error_bad_lines=False)
+    target_df = pd.read_csv(args.target_file, encoding="utf-8", error_bad_lines=False)
 
     output_column_list = ['FinProCode', 'set_name', "货币市场类", '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品']
     output_column_list = output_column_list + list(reflect_classify_set)

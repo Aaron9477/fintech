@@ -147,11 +147,11 @@ def code_preprocess(input_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='../../基金信息_2022-12-31.xlsx')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data_pybz/pyjy_bank_wealth_product_0306.csv')
-
     # parser.add_argument('--input_file', type=str, help='input_file', default='../../22年Q3/基金信息_2022-09-30.xlsx')
     # parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data_pybz/pyjy_bank_wealth_product_0930.csv')
+
+    parser.add_argument('--input_file', type=str, help='input_file', default='../../22年Q3/基金信息_2022-09-30.xlsx')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../../data_pybz/pyjy_bank_wealth_product_0930.csv')
 
     parser.add_argument('--score_file', type=str, help='input_file', default='../../全部基金量化打分排名.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财公司重仓基金明细表.xlsx')
@@ -197,6 +197,15 @@ if __name__ == '__main__':
     company_fund_rank_add_company_asset['二级分类下量化打分'].fillna('-', inplace=True)
     company_fund_rank_add_company_asset['二级分类下量化打分排名'].fillna('-', inplace=True)
 
+    company_list = list(company_fund_rank_add_company_asset['理财子公司'])
+    new_company_list = []
+    for i in range(len(company_list)):
+        if company_list[i] != '汇华理财有限公司':
+            new_company_list.append(company_list[i][:-6])
+        else:
+            new_company_list.append('汇华理财')
+    company_fund_rank_add_company_asset['理财子公司'] = new_company_list
+
     company_fund_rank_add_company_asset.rename(columns={'基金一级分类': 'wind一级分类', '基金二级分类': 'wind二级分类', '理财子公司': '理财公司',
                                                         '基金资产规模': '持有基金市值（万元）', '理财公司基金总规模': '理财公司投资基金总规模（万元）',
                                                         '基金占公司基金总规模之比': '该基金在理财子全部持仓基金中占比', '基金资产占比': '基金占理财公司总资产比例', '理财公司投资基金总规模': '全市场理财公司投资该基金总规模（万元）',
@@ -210,7 +219,7 @@ if __name__ == '__main__':
 
 
     final_df = company_fund_rank_add_company_asset[['基金名称', '基金代码', 'wind一级分类', 'wind二级分类', '基金公司', '理财公司', '持有基金市值（万元）', '理财公司投资基金总规模（万元）',
-                   '该基金在理财子全部持仓基金中占比', '全市场理财公司投资该基金总规模（万元）', '全市场投资该基金理财公司总数', '全市场投资该基金理财产品总数',
+                   '该基金在理财子全部持仓基金中占比', '基金占理财公司总资产比例', '全市场理财公司投资该基金总规模（万元）', '全市场投资该基金理财公司总数', '全市场投资该基金理财产品总数',
                    '基金近一年收益率(截至220930)', '基金评估中心二级分类下量化打分', '二级分类下量化打分排名']]
 
     final_df.to_excel(writer, sheet_name='理财子前十大基金')

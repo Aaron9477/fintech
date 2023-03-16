@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
-from func import get_trading_day
+from func import choose_report_detail_table
 
 #显示所有的列
 pd.set_option('display.max_columns', None)
@@ -71,24 +71,14 @@ def split_list_average_n(origin_list, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
-
-    if args.statistics_date == '2022-09-30':
-        input_file = '../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        input_file = '../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-    else:
-        raise ValueError
-
-    trading_day = get_trading_day(statistics_date)
-
-    df = pd.read_csv(input_file)
-    all_data_df = pd.read_csv(all_data_file)[['FinProCode', 'MaturityDate',
+    df = pd.read_csv(args.input_file)
+    all_data_df = pd.read_csv(args.all_data_file)[['FinProCode', 'MaturityDate',
                                                    'product_establish_date', 'RegistrationCode', 'ProductType']]
 
     # 前处理
@@ -101,19 +91,19 @@ if __name__ == '__main__':
     w.start()
     index = 0
     for feat in target_feature:
-        wind_return = w.wsd(fund_str, feat, trading_day, trading_day, "annualized=0;PriceAdj=F")
+        wind_return = w.wsd(fund_str, feat, statistics_date, statistics_date, "annualized=0;PriceAdj=F")
         fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
         value_list = [fund_value_dict[x] for x in fund_list]
         df[feature_name[index]] = value_list
         index += 1
 
-    trading_day_before_1y = str(int(trading_day[:4])-1) + trading_day[4:]
-    wind_return = w.wsd(fund_str, "NAV_adj", trading_day_before_1y, trading_day_before_1y, "PriceAdj=F")
+    statistics_date_before_1y = str(int(statistics_date[:4])-1) + statistics_date[4:]
+    wind_return = w.wsd(fund_str, "NAV_adj", statistics_date_before_1y, statistics_date_before_1y, "PriceAdj=F")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
     df['统计日一年前净值'] = value_list
 
-    wind_return = w.wsd(fund_str, "NAV_adj", trading_day, trading_day, "PriceAdj=F")
+    wind_return = w.wsd(fund_str, "NAV_adj", statistics_date, statistics_date, "PriceAdj=F")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
     df['统计日净值'] = value_list

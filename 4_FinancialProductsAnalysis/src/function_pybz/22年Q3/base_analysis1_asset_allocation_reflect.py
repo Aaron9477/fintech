@@ -69,29 +69,23 @@ def cal_non_standard_asset_sum(input_df):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--raw_asset_file', type=str, help='raw_asset_file', default='../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230314.csv')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
 
     args = parser.parse_args()
     reflect_file = args.reflect_file
+    raw_asset_file = args.raw_asset_file
+    non_standard_file = args.non_standard_file
     statistics_date = args.statistics_date
-
-    if args.statistics_date == '2022-09-30':
-        raw_asset_file = '../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-        non_standard_file = '../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230314.csv'
-    elif args.statistics_date == '2022-12-31':
-        raw_asset_file = '../data_pybz/pybz_金融产品资产配置_22年四季报_230315.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-        non_standard_file = '../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230315.csv'
-    else:
-        raise ValueError
 
     reflect_df = pd.read_excel(reflect_file, sheet_name='资产配置表映射关系')
     try:
         raw_asset_data = pd.read_csv(raw_asset_file)
     except:
         raw_asset_data = pd.read_csv(raw_asset_file, encoding='gbk')
-    all_data_df = pd.read_csv(all_data_file)
+    all_data_df = pd.read_csv(args.all_data_file)
     non_standard_df = pd.read_csv(args.non_standard_file)
 
     # 映射关系

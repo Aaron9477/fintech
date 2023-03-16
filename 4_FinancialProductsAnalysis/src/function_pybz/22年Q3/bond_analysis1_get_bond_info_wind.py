@@ -66,24 +66,18 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    # parser.add_argument('--input_file', type=str, help='input_file', default='../data/金融产品前十大持仓_加入产品总资产_221116.csv')
+    # parser.add_argument('--input_file', type=str, help='input_file', default='../data/资产明细_221216.csv')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     parser.add_argument('--output_file', type=str, help='output_file', default='债券信息.xlsx')
     args = parser.parse_args()
 
+    df = pd.read_csv(args.input_file)
+    all_data_df = pd.read_csv(args.all_data_file)
     statistics_date = args.statistics_date
     output_file = args.output_file
-
-    if args.statistics_date == '2022-09-30':
-        input_file = '../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        input_file = '../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
-    else:
-        raise ValueError
-
-    df = pd.read_csv(input_file)
-    all_data_df = pd.read_csv(all_data_file)
 
     # 理财产品前处理
     df = df_preprocess(df, all_data_df, statistics_date)

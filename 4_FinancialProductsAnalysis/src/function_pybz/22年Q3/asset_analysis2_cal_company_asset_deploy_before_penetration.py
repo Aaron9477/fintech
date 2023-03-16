@@ -163,7 +163,7 @@ def preprocess(input_df, statistics_date):
     return output_df
 
 
-# 定义各产品类型统计各类型资产 投资规模and比例 的dict
+# 定义各产品类型统计各类型资产 投资规模and比例 的dict，用于后期数据存储
 def define_product_asset_dict(asset_list, investment_type_list):
     # 定义各产品类型，需要统计的资产类别
     asset_sum_dict = dict()
@@ -194,7 +194,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='穿透前资产投资比例统计.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='大类资产统计_委外分析.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     args = parser.parse_args()
 
     output_file = args.output_file
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     # 产品类型集合
     investment_type_list = ['现金管理类', '固定收益类', '混合类', '权益类', '商品及衍生品类', '全部']
 
-    # 定义各产品类型统计各类型资产 投资规模and比例 的dict
+    # 定义各产品类型统计各类型资产 投资规模and比例 的dict，用于后期数据存储
     product_asset_scale_dict, product_asset_ratio_dict = define_product_asset_dict(asset_list, investment_type_list)
 
     # 按公司遍历
