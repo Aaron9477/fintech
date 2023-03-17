@@ -54,30 +54,23 @@ def get_fund_info_list_from_database(conn, cursor):
     return fund_info_list
 
 
-def write_CET_data_dict(cet_data_dict_path, add_fund_list, supply_data_df):
-    # 定义列名和之前一致
-    col_name_list = ["fund_id", "产品简称_模糊匹配", "类型", "产品简称", "机构简称", "成立日期", "净值日期", "投资策略",
-                     "近3年收益率(年化)", "近3年收益率(年化)全市场排名", "排名", "adivior_id", "产品简称_原", "模糊匹配_score"]
-    output = pd.DataFrame(columns=col_name_list)
-    add_fund_list.drop_duplicates(subset=['产品简称'], keep='first', inplace=True)
-    output = pd.concat([output, add_fund_list], axis=0)
-    output = pd.merge(output, supply_data_df, how='left', left_on='产品简称', right_on='fund_name')
+def write_CET_data_dict(cet_data_dict_path, add_fund_list):
+    print(cet_data_dict_path)
+    old_data = pd.read_csv(cet_data_dict_path)
+    # old_data = pd.read_csv(cet_data_dict_path, encoding='utf_8_sig')
 
-    # 补充私募数据库里的缺失id
-    def supply_fund_id(row):
-        if row['fund_id'] == '-1' and isinstance(row['new_fund_id_smpp'], str):
-            return row['new_fund_id_smpp']
-        else:
-            return row['fund_id']
-    output['fund_id'] = output.apply(lambda x: supply_fund_id(x), axis=1)
+    # time_list = list(old_data['成立日期'])
+    # old_data['成立日期'] = datatime_transfer1(time_list)
 
-    # 移除supply_data_df的字段
-    output.drop(['fund_name', 'new_fund_id_smpp'], axis=1, inplace=True)
+    new_fund_list = old_data.append(add_fund_list)
+    new_fund_list.drop_duplicates(subset=['产品简称'], keep='first', inplace=True)
 
-    output = output[output['fund_id'] != '-1']
-
-    print(add_fund_list)
-    output.to_csv(cet_data_dict_path, encoding='utf_8_sig', index=False)
+    # print("fund_base_info中的establish_time形式由2022/01/01改为了2022-01-01")
+    # print("当前工具不能使用，需要修改！！！！")
+    # exit()
+    print(new_fund_list)
+    new_fund_list.to_csv(cet_data_dict_path, encoding='utf_8_sig', index=None)
+    # dt = pd.merge(fund_nav, dt, how='left', left_on='fund_id', right_on='fund_id_smpp')
 
 
 if __name__ == '__main__':
@@ -85,17 +78,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--db_path', type=str, help='数据库路径', default='test2.db')
     parser.add_argument('--cet_data_dict_path', type=str, help='CET基金详情文件位置', default='nav_data_dic.csv')
-    parser.add_argument('--supply_data_path', type=str, help='CET基金详情文件位置', default='缺失fund_id补充.xlsx')
     # parser.add_argument('--cet_data_dict_path', type=str, help='CET基金详情文件位置', default='D:/中信建投/7_组内工具/CET/Data/nav_data_dic.csv')
     args = parser.parse_args()
 
-    db_path = args.db_path
-    cet_data_dict_path = args.cet_data_dict_path
-    supply_data_path = args.supply_data_path
-
-    supply_data_df = pd.read_excel(supply_data_path)
-
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(args.db_path)
     cursor = conn.cursor()
 
     fund_info_list = get_fund_info_list_from_database(conn, cursor)
@@ -103,7 +89,7 @@ if __name__ == '__main__':
     time_list = list(fund_info_list['成立日期'])
     fund_info_list['成立日期'] = datatime_transfer1(time_list)
 
-    write_CET_data_dict(cet_data_dict_path, fund_info_list, supply_data_df)
+    write_CET_data_dict(args.cet_data_dict_path, fund_info_list)
 
     cursor.close()
     conn.close()
