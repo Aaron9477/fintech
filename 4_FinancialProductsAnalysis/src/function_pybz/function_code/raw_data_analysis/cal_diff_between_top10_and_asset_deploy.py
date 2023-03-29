@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-
+'''
+    代码内容：粗略统计某类资产在资产配置表里的投资比例与前十大投资比例之差（代码以债券为例）
+    代码目的：分析前十大资产表能体现多少该类型资产
+'''
 import pandas as pd
 import numpy as np
 import argparse

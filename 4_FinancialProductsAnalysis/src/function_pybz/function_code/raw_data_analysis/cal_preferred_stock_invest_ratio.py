@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
-    代码内容：统计前十大资产表投资比例之和的均值
-    代码目的：统计前十大资产表能展现产品资产情况
+    代码内容：粗略统计优先股的投资比例判断
+    代码目的：通过资产配置表里权益投资占比，预估真权益投资占比是否可行
 '''
 import pandas as pd
 import numpy as np
@@ -32,6 +32,13 @@ def statistics_top10_ratio(input_df):
     return output_dict
 
 
+def get_union_set(row):
+    if np.isnan(row['actual_proportion']):
+        return row['actual_proportion_cal_myself']
+    else:
+        return row['actual_proportion']
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
@@ -40,32 +47,29 @@ if __name__ == '__main__':
     statistics_date = args.statistics_date
     if args.statistics_date == '2022-09-30':
         top10_file = '../../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
+        asset_deploy_file = '../../../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv'
     elif args.statistics_date == '2022-12-31':
         top10_file = '../../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
+        asset_deploy_file = '../../../data_pybz/pybz_金融产品资产配置_22年四季报_230315.csv'
     else:
         raise ValueError
 
     top10_df = pd.read_csv(top10_file)
+    asset_deploy_df = pd.read_csv(asset_deploy_file)
 
-    output_df = pd.DataFrame(columns=['AgentName', 'ChiName', 'FinProCode', 'top10_ratio_sum', 'top10_bond_ratio_sum'])
-    top10_ratio_sum_list = []
-    top10_bond_ratio_sum_list = []
+    top10_preferred_stock_df = top10_df[(top10_df['three_level_type'] == '优先股')]
+    top10_preferred_stock_count = top10_preferred_stock_df['MarketValue'].sum()
 
-    index = 0
-    grouped = top10_df.groupby('FinProCode')
-    for group_name in list(grouped.groups.keys()):
-        res_dict = statistics_top10_ratio(grouped.get_group(group_name))
-        if res_dict:
-            top10_ratio_sum_list.append(res_dict['top10_ratio_sum'])
-            top10_bond_ratio_sum_list.append(res_dict['top10_bond_ratio_sum'])
-            output_df = output_df.append(res_dict, ignore_index=True)
-        index += 1
-        if index % 1000 == 0:
-            print(index)
+    top10_equity_df = top10_df[(top10_df['primary_type_chi'] == '权益类')]
+    top10_equity_count = top10_equity_df['MarketValue'].sum()
 
-    print("前十大投资比例之和的均值是{}".format(np.mean(top10_ratio_sum_list)))
-    print("前十大投资比例之和的中位数是{}".format(np.median(top10_ratio_sum_list)))
+    print(top10_preferred_stock_count)
+    print(top10_equity_count)
 
-    print("前十大中债券投资比例之和的均值是{}".format(np.mean(top10_bond_ratio_sum_list)))
-    print("前十大中债券投资比例之和的中位数是{}".format(np.median(top10_bond_ratio_sum_list)))
+    # asset_deploy_equity_df = asset_deploy_df[(asset_deploy_df['primary_type_chi']) == '权益类']
+    # equity_count = asset_deploy_equity_df['actual_scale'].sum()
+
+    print(top10_preferred_stock_count / (top10_preferred_stock_count + top10_equity_count))
+
+
 

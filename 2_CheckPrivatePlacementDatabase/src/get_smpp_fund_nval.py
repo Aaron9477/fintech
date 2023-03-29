@@ -209,7 +209,7 @@ if __name__ == '__main__':
 
     # 获取净值信息
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--fund_id', type=str, help='fund_id', default='HF00000JZE')
+    parser.add_argument('--fund_id', type=str, help='fund_id', default='HF0000000X')
     args = parser.parse_args()
     updata_data = get_data(args.fund_id)
 

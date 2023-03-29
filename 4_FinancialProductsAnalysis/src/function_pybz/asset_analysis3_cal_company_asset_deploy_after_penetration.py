@@ -191,6 +191,14 @@ def define_product_asset_dict(asset_list, investment_type_list):
     return product_asset_scale_dict, product_asset_ratio_dict
 
 
+def set_zero_asset_management_after_penetration(row):
+    if row['穿透类型'] == '穿透后' and row['资产大类'] == '资管产品' and row['资产细类'] != '公募基金':
+        # 输出有问题的数据
+        print(row)
+        row['资产规模'], row['资产占比'], row['有披露的公司资产规模均值'], row['有披露的公司资产占比均值'] = 0, np.nan, np.nan, np.nan
+    return row
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='穿透后资产投资比例统计.xlsx')
@@ -314,6 +322,10 @@ if __name__ == '__main__':
             asset_res_list_final.append(asset_res)
     asset_res_list_df = pd.DataFrame(asset_res_list_final).sort_values(['公司名称', '产品类型', '资产大类序号', '资产细类序号'])
     asset_res_list_df['穿透类型'] = '穿透后'
+
+    # # 将穿透后数据中的资管产品部分强制置零，普益的数据有误
+    # print('\n输出有问题的数据')
+    # asset_res_list_df = asset_res_list_df.apply(lambda x: set_zero_asset_management_after_penetration(x), axis=1)
 
     # 接着穿透前的数据补充穿透后的，统一存到'资产配置统计分析'sheet中
     final_df = pd.read_excel(args.output_file, sheet_name='资产配置统计分析')
