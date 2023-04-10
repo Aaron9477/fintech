@@ -209,7 +209,7 @@ if __name__ == '__main__':
 
     # 获取净值信息
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--fund_id', type=str, help='fund_id', default='HF0000000X')
+    parser.add_argument('--fund_id', type=str, help='fund_id', default='HF00006NNM')
     args = parser.parse_args()
     updata_data = get_data(args.fund_id)
 
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     #                   "HF00006QZT", "HF00003ZU0", "HF000063FW", "HF00005FAB",]
 
     print(updata_data)
-    # updata_data.to_excel('明汯价值成长1期.xlsx')
+    updata_data.to_excel('恒如中证500指数增强一号私募证券投资基金.xlsx')
 
 
 

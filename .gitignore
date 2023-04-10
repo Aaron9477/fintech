@@ -1,5 +1,6 @@
 *.xls
 *.xlsx
+!1_PrivatePlacementDatabase/src/function/缺失fund_id补充.xlsx
 *.db
 !1_PrivatePlacementDatabase/src/function/test2.db
 *.csv

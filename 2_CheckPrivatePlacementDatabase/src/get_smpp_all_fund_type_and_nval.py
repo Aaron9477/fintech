@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-获取私募排排一个基金的所有净值情况
+获取私募排排一个基金的所有净值情况，北京信托的需求
 """
 import pandas as pd
 import numpy as np
@@ -281,6 +281,7 @@ if __name__ == '__main__':
     parser.add_argument('--begin_date', type=str, help='begin_date', default='2021-12-31')
     parser.add_argument('--end_date', type=str, help='end_date', default='2022-12-30')
     args = parser.parse_args()
+
     updata_data = get_data_tmp(args.begin_date, args.end_date)
 
     # 获取规模信息

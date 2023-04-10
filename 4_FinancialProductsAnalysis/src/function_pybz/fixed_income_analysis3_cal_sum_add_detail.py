@@ -121,13 +121,8 @@ def judge_enhance_type(input):
         # 未识别出固收增强的，判断是否是纯债还是无法判断
         if len(asset_list) == 0:
             # 固收投资>95% 或者 只投纯债类公募的产品基金+固收投资>95% 认为是纯债
-            if row['固收'] > 0.95 or ((row['资产明细是否有含权基金'] == 0 or np.isnan(row['资产明细是否有含权基金'])) and (row['固收'] + row['公募基金'] > 0.95)):
+            if row['固收'] > 0.95:
                 enhance_type_list.append('纯债')
-            # 对投资其他类资产的，放宽要求
-            elif row['固收'] > 0.9 and (row['固收'] + row['其他'] > 0.95):
-                enhance_type_list.append('纯债')
-            elif isinstance(row['固收'], str) or not np.isnan(row['固收']):
-                enhance_type_list.append('固收+(其他)')
             else:
                 enhance_type_list.append('底层数据未披露')
         else:
@@ -207,7 +202,6 @@ def get_asset_allocation_ratio(input):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
     parser.add_argument('--asset_allocation_file', type=str, help='asset_allocation_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../data_pybz/out5.xlsx')
     parser.add_argument('--top10_file', type=str, help='top10_file', default='前十大持仓固收增强分析.xlsx')
