@@ -13,9 +13,9 @@ from func import bond_analysis_df_preprocess, choose_report_detail_table, \
 
 
 target_feature = ["fullname", "amount", "windl1type", "windl2type", "municipalbond", "municipalbondYY",
-                  "municipalbondWind", "subordinateornot", "perpetualornot", "latestissurercreditrating", "abs_province"]
+                  "municipalbondWind", "subordinateornot", "perpetualornot", "latestissurercreditrating", "abs_province", "modifiedduration"]
 feature_name = ['债券名称', '债券评级', 'wind一级分类', 'wind二级分类', '是否城投债', '是否城投债(wind)',
-                '是否城投债(YY)', '是否次级债', '是否永续债', '发行人评级', '主体地区']
+                '是否城投债(YY)', '是否次级债', '是否永续债', '发行人评级', '主体地区', '收盘价修正久期']
 
 
 # 从万德拉取特定日期的数据
@@ -68,8 +68,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # parser.add_argument('--input_file', type=str, help='input_file', default='../data/金融产品前十大持仓_加入产品总资产_221116.csv')
     # parser.add_argument('--input_file', type=str, help='input_file', default='../data/资产明细_221216.csv')
-    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../data_pybz/pyjy_bank_wealth_product_0321.csv')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     parser.add_argument('--output_file', type=str, help='output_file', default='债券信息.xlsx')
     args = parser.parse_args()

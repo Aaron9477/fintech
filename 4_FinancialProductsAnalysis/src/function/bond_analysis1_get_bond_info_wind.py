@@ -13,9 +13,9 @@ from func import bond_analysis_code_preprocess, bond_analysis_df_preprocess, cho
 
 
 target_feature = ["fullname", "amount", "windl1type", "windl2type", "municipalbond", "municipalbondYY",
-                  "municipalbondWind", "subordinateornot", "perpetualornot", "latestissurercreditrating", "abs_province"]
+                  "municipalbondWind", "subordinateornot", "perpetualornot", "latestissurercreditrating", "abs_province", "modifiedduration"]
 feature_name = ['债券名称', '债券评级', 'wind一级分类', 'wind二级分类', '是否城投债', '是否城投债(wind)',
-                '是否城投债(YY)', '是否次级债', '是否永续债', '发行人评级', '主体地区']
+                '是否城投债(YY)', '是否次级债', '是否永续债', '发行人评级', '主体地区', '收盘价修正久期']
 
 
 # target_feature = ["fullname", "amount", "windl1type"]

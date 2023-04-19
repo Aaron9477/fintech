@@ -13,9 +13,9 @@ from func import bond_analysis_df_preprocess, choose_report_detail_table, \
 
 
 target_feature = ["fullname", "amount", "windl1type", "windl2type", "municipalbond", "municipalbondYY",
-                  "municipalbondWind", "subordinateornot", "perpetualornot", "latestissurercreditrating", "abs_province"]
+                  "municipalbondWind", "subordinateornot", "perpetualornot", "latestissurercreditrating", "abs_province", "modifiedduration"]
 feature_name = ['债券名称', '债券评级', 'wind一级分类', 'wind二级分类', '是否城投债', '是否城投债(wind)',
-                '是否城投债(YY)', '是否次级债', '是否永续债', '发行人评级', '主体地区']
+                '是否城投债(YY)', '是否次级债', '是否永续债', '发行人评级', '主体地区', '收盘价修正久期']
 
 
 # 从万德拉取特定日期的数据
@@ -78,7 +78,9 @@ if __name__ == '__main__':
         all_data_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
     elif args.statistics_date == '2022-12-31':
         input_file = '../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0306.csv'
+        all_data_file = '../data_pybz/pyjy_bank_wealth_product_0321.csv'
+        # 221231是节假日，无数据
+        statistics_date = '2022-12-30'
     else:
         raise ValueError
 

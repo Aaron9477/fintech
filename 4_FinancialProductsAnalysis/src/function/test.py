@@ -18,11 +18,13 @@ w.start()
 #
 # wind_return = w.wsd(fund_str, "NAV_adj", statistics_date, statistics_date, "PriceAdj=F")
 
-wind_return = w.wsd("175653.SH", "duration,modifiedduration", "2022-09-30", "2022-09-30", "credibility=1")
-print(wind_return)
+# wind_return = w.wsd("175653.SH", "duration,calc_mduration,modifiedduration", "2022-09-30", "2022-09-30", "credibility=1")
+# print(wind_return)
+#
+# wind_return = w.wsd("162324.SH", "duration,calc_mduration,modifiedduration", "2022-09-30", "2022-09-30", "credibility=1")
+# print(wind_return)
 
-wind_return = w.wsd("162324.SH", "duration,modifiedduration", "2022-09-30", "2022-09-30", "credibility=1")
+wind_return = w.wsd("092118002.IB", "duration,calc_mduration,modifiedduration", "2022-09-30", "2022-09-30")
 print(wind_return)
-
-wind_return = w.wsd("092118002.IB", "duration,modifiedduration", "2022-09-30", "2022-09-30", "credibility=1")
+wind_return = w.wsd("092118002.IB", "duration,calc_mduration,modifiedduration", "2022-09-30", "2022-09-30", "credibility=1")
 print(wind_return)

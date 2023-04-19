@@ -9,11 +9,10 @@ import pandas as pd
 import numpy as np
 import argparse
 
-
-# target_feature = ["maturitydate", "bduration", "sduration", "sprdura_cnbd", "calc_mduration"]
-# feature_name = ['到期日期', '基准久期', '利差久期', '估值利差久期(中债)', '修正久期']
-target_feature = ["modifiedduration"]
-feature_name = ['收盘价修正久期']
+target_feature = ["windl1type", "windl2type", "modifiedduration", "amount", "latestissurercreditrating", "municipalbond", "municipalbondYY",
+                  "municipalbondWind", "subordinateornot", "perpetualornot"]
+feature_name = ['wind一级分类', 'wind二级分类', '收盘价修正久期', '债券评级', '发行人评级', '是否城投债', '是否城投债(wind)',
+                '是否城投债(YY)', '是否次级债', '是否永续债']
 
 
 # 从万德拉取特定日期的数据
@@ -54,22 +53,26 @@ def get_bond_feat(input_df, bund_code_list, statistics_date, start_index):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='债券信息.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
-    parser.add_argument('--output_file', type=str, help='output_file', default='债券信息_补充.xlsx')
+    parser.add_argument('--input_file', type=str, help='input_file', default='../tests/平安理财专户持仓明细.xlsx')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-30')
+    parser.add_argument('--statistics_sheet', type=str, help='statistics_sheet', default='12月')
+    parser.add_argument('--output_file', type=str, help='output_file', default='债券信息_12月.xlsx')
     args = parser.parse_args()
 
-    df = pd.read_excel(args.input_file)
+    df = pd.read_excel(args.input_file, sheet_name=args.statistics_sheet)
     statistics_date = args.statistics_date
     output_file = args.output_file
 
 
     w.start()
 
-    bond_code_list = df['SecuCode']
+    bond_df = df[~df['类别'].isin(['货币基金', '其他', '衍生品', '债券型基金'])]
+    bond_code_list = bond_df[' 债券代码']
+    bond_code_list = [x.strip() for x in bond_code_list]
+    bond_df[' 债券代码'] = bond_code_list
 
     # 批量拉取债券字段（除了前面已经拉取的债券名称，所以start_index从1开始）
     start_index = 0
-    get_bond_feat(df, bond_code_list, statistics_date, start_index)
+    get_bond_feat(bond_df, bond_code_list, statistics_date, start_index)
 
-    df.to_excel("债券信息_补充.xlsx")
+    bond_df.to_excel(output_file)

@@ -10,10 +10,10 @@ import numpy as np
 import argparse
 
 
-target_feature = ["maturitydate", "bduration", "sduration", "sprdura_cnbd", "calc_mduration"]
-feature_name = ['到期日期', '基准久期', '利差久期', '估值利差久期(中债)', '修正久期']
-# target_feature = ["calc_mduration"]
-# feature_name = ['修正久期']
+# target_feature = ["maturitydate", "bduration", "sduration", "sprdura_cnbd", "calc_mduration"]
+# feature_name = ['到期日期', '基准久期', '利差久期', '估值利差久期(中债)', '修正久期']
+target_feature = ["modifiedduration"]
+feature_name = ['收盘价修正久期']
 
 
 # 从万德拉取特定日期的数据
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     w.start()
 
-    bond_code_list = df['债券代码']
+    bond_code_list = df['SecuCode']
 
     # 批量拉取债券字段（除了前面已经拉取的债券名称，所以start_index从1开始）
     start_index = 0
