@@ -218,8 +218,10 @@ def get_bond_topK(input, target_feat, topK):
             name_code_list.append(name_list[i] + "(" + code_list[i] + ")")
 
     df_input['债券名称_代码'] = name_code_list
-    df_input = df_input[['AgentName', target_feat, '债券名称_代码', 'MarketValue']]
-    grouped = df_input.groupby(['AgentName', target_feat, '债券名称_代码']).agg({'MarketValue': sum})
+    df_input = df_input[['AgentName', target_feat, '债券名称_代码', '债券评级', '收盘价修正久期', '主体地区', 'MarketValue']]
+    df_input.fillna("-", inplace=True)
+
+    grouped = df_input.groupby(['AgentName', target_feat, '债券名称_代码', '债券评级', '收盘价修正久期', '主体地区']).agg({'MarketValue': sum})
     g = grouped.groupby(level=[0, 1], group_keys=False)['MarketValue'].nlargest(topK)
     res_list = []
 
@@ -232,8 +234,8 @@ def get_bond_topK(input, target_feat, topK):
             tmp_fund_category = line[0][1]
             rank_index = 0
         rank_index += 1
-        res_list.append([line[0][2], line[0][3], line[0][4], line[1], rank_index])
-    col_name = ['理财子公司', target_feat, '债券名称_代码', '债券资产规模', '排名']
+        res_list.append([line[0][2], line[0][3], line[0][4], line[0][5], line[0][6], line[0][7], line[1], rank_index])
+    col_name = ['理财子公司', target_feat, '债券名称_代码', '债券评级', '久期', '主体地区', '债券资产规模', '排名']
     df_res = pd.DataFrame(data=res_list, columns=col_name)
 
     # 统计理财子公司

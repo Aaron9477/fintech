@@ -77,20 +77,19 @@ def bond_type_statistics(input):
         if wind_type_first_list[i] in interest_rate_bond or "国债" in bond_name_list[i] or "证金" in bond_name_list[i] or \
                 (wind_type_first_list[i] == '金融债' and wind_type_second_list[i] == '政策银行债'):
             bond_type.append("利率债")
-        elif wind_type_first_list[i] in credit_bond or (wind_type_first_list[i] == '金融债' and wind_type_second_list[i] != '政策银行债'):
-            # 部分国债和证金债没有编码或者在万德上查不到
-            if bond_grade_list[i] == 'AAA' or bond_grade_list[i] == 'AA+' or bond_grade_list[i] == 'A-1' or bond_grade_list[i] == 'A-2':
-                bond_type.append("AA+(含)及以上信用债")
-            elif pd.isna(bond_grade_list[i]):
-                bond_type.append("无评级信用债")
-            else:
-                bond_type.append("AA+以下信用债")
         elif wind_type_first_list[i] in partial_bond:
             bond_type.append("偏股型债")
         elif wind_type_first_list[i] == '同业存单':
             bond_type.append("同业存单")
         else:
-            bond_type.append("无评级信用债")
+            # 部分国债和证金债没有编码或者在万德上查不到
+            if bond_grade_list[i] == 'AAA' or bond_grade_list[i] == 'AA+' or bond_grade_list[i] == 'A-1' or \
+                    bond_grade_list[i] == 'A-2':
+                bond_type.append("AA+(含)及以上信用债")
+            elif pd.isna(bond_grade_list[i]):
+                bond_type.append("无评级信用债")
+            else:
+                bond_type.append("AA+以下信用债")
     df_input["债券类型"] = bond_type
 
     return df_input
