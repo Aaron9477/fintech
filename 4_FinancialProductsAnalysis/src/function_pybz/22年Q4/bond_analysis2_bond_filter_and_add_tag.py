@@ -184,7 +184,7 @@ def mix_up_bond_name_with_report_name(input):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     parser.add_argument('--input_file', type=str, help='input_file', default='债券信息.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财子债券打标签.xlsx')
     args = parser.parse_args()
@@ -196,8 +196,8 @@ if __name__ == '__main__':
     if args.statistics_date == '2022-09-30':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
     elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-    elif args.statistics_date == '2022-03-31':
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230424.csv'
+    elif args.statistics_date == '2023-03-31':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230425.csv'
     else:
         raise ValueError

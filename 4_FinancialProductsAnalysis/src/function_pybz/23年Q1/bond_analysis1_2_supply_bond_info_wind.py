@@ -55,7 +55,7 @@ def get_bond_feat(input_df, bund_code_list, statistics_date, start_index):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='债券信息.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     parser.add_argument('--output_file', type=str, help='output_file', default='债券信息_补充.xlsx')
     args = parser.parse_args()
 

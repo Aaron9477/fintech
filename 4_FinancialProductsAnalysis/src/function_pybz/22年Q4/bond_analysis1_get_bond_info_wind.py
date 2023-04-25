@@ -8,8 +8,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
-from func import bond_analysis_df_preprocess, choose_report_detail_table, \
-    choose_product_mother_son, get_product_exist
+from func import bond_analysis_df_preprocess, get_trading_day, choose_product_mother_son, get_product_exist
 
 
 target_feature = ["fullname", "amount", "windl1type", "windl2type", "municipalbond", "municipalbondYY",
@@ -66,22 +65,23 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     parser.add_argument('--output_file', type=str, help='output_file', default='债券信息.xlsx')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
     output_file = args.output_file
+    trading_day = get_trading_day(statistics_date)
 
     if args.statistics_date == '2022-09-30':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
         all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
     elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230315.csv'
-        all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0321.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230424.csv'
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
         # 221231是节假日，无数据
         statistics_date = '2022-12-30'
-    elif args.statistics_date == '2022-03-31':
+    elif args.statistics_date == '2023-03-31':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230425.csv'
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
     else:
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     all_data_df = pd.read_csv(all_data_file)
 
     # 理财产品前处理
-    df = df_preprocess(df, all_data_df, statistics_date)
+    df = df_preprocess(df, all_data_df, trading_day)
     # 债券产品前处理
     df = bond_analysis_df_preprocess(df)
     # 删除无用的列
@@ -102,6 +102,6 @@ if __name__ == '__main__':
 
     w.start()
 
-    get_bond_feat(df, bond_code_list, statistics_date)
+    get_bond_feat(df, bond_code_list, trading_day)
 
     df.to_excel(output_file)

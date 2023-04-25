@@ -185,16 +185,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--series_name_file', type=str, help='series_name_file', default='../../data_pybz/out5.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
 
     if args.statistics_date == '2022-09-30':
         target_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
+        series_name_file = '../../data_pybz/out5.xlsx'
     elif args.statistics_date == '2022-12-31':
         target_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
-    elif args.statistics_date == '2022-03-31':
+        series_name_file = '../../data_pybz/out5-22q4.xlsx'
+    elif args.statistics_date == '2023-03-31':
         target_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
+        series_name_file = '../../data_pybz/out5-23q1.xlsx'
     else:
         raise ValueError
 
@@ -225,7 +227,7 @@ if __name__ == '__main__':
             print(index)
 
     # 增加产品名称
-    series_name_df = pd.read_excel(args.series_name_file)
+    series_name_df = pd.read_excel(series_name_file)
     series_name_df['set_name'] = series_name_df['set'].apply(lambda x: x.split('-')[0])
 
     before_penetration_df = pd.merge(before_penetration_df, series_name_df[['FinProCode', 'set_name']], how='left', on=['FinProCode'])

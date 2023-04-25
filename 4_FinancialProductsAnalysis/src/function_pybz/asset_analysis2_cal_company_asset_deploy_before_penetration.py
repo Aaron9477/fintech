@@ -194,7 +194,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='穿透前资产投资比例统计.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='大类资产统计_委外分析.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
     args = parser.parse_args()
 
     output_file = args.output_file

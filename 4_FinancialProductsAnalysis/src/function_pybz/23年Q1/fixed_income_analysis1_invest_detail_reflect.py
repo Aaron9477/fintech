@@ -122,7 +122,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../../data_pybz/大类资产映射划分_230227.xlsx')
     parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='产品非标投资规模统计.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     elif args.statistics_date == '2022-12-31':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230424.csv'
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
-    elif args.statistics_date == '2022-03-31':
+    elif args.statistics_date == '2023-03-31':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230425.csv'
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
     else:

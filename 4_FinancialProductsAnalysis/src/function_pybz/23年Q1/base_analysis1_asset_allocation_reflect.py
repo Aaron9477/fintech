@@ -69,7 +69,7 @@ def cal_non_standard_asset_sum(input_df):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
 
     args = parser.parse_args()
     reflect_file = args.reflect_file
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
         raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年四季报_230424.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230424.csv'
-    elif args.statistics_date == '2022-03-31':
+    elif args.statistics_date == '2023-03-31':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
         raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230425.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230425.csv'
