@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 import argparse
 from enum import Enum
-from func import choose_product_mother_son, get_product_exist
+from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
+import datetime, time
 
 
 # 前处理模块 部分规则由智妍提供
@@ -115,12 +116,16 @@ def judge_enhance_type(input):
 
         # 是否投资了含权基金
         if row['资产明细是否有含权基金'] == 1 and '权益' not in asset_list:
-            asset_list.append('权益')
+            asset_list.append('含权基金')
+
+        # 未识别出固收增强的，且投了一些公募基金，标为固收+公募
+        if len(asset_list) == 0 and row['公募基金'] > 0.05:
+            asset_list.append('基金')
 
         # 未识别出固收增强的，判断是否是纯债还是无法判断
         if len(asset_list) == 0:
             # 固收投资>95% 或者 只投纯债类公募的产品基金+固收投资>95% 认为是纯债
-            if row['固收'] > 0.95:
+            if row['固收'] >= 0.95:
                 enhance_type_list.append('纯债')
             else:
                 enhance_type_list.append('底层数据未披露')
@@ -211,7 +216,6 @@ if __name__ == '__main__':
     top10_file = args.top10_file
     fund_whether_has_equity_file = args.fund_whether_has_equity_file
     statistics_date = args.statistics_date
-
 
     if args.statistics_date == '2022-09-30':
         all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'

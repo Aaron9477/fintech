@@ -116,12 +116,16 @@ def judge_enhance_type(input):
 
         # 是否投资了含权基金
         if row['资产明细是否有含权基金'] == 1 and '权益' not in asset_list:
-            asset_list.append('权益')
+            asset_list.append('含权基金')
+
+        # 未识别出固收增强的，且投了一些公募基金，标为固收+公募
+        if len(asset_list) == 0 and row['公募基金'] > 0.05:
+            asset_list.append('基金')
 
         # 未识别出固收增强的，判断是否是纯债还是无法判断
         if len(asset_list) == 0:
             # 固收投资>95% 或者 只投纯债类公募的产品基金+固收投资>95% 认为是纯债
-            if row['固收'] > 0.95:
+            if row['固收'] >= 0.95:
                 enhance_type_list.append('纯债')
             else:
                 enhance_type_list.append('底层数据未披露')

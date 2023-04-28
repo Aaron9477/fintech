@@ -9,19 +9,31 @@ import datetime
 import copy
 
 
+# 按照固收增强类别，做理财产品的筛选
+def get_enhance_filter(input_df, enhance_type):
+    # 固收增强（权益）要算上含权基金
+    if enhance_type == '固收增强（权益）':
+        enhance_filter = (input_df['enhance_type'] == enhance_type) | (input_df['enhance_type'] == '└其中:含权基金')
+    else:
+        enhance_filter = (input_df['enhance_type'] == enhance_type)
+    return enhance_filter
+
+
 def cal_fixed_income_enhance_type(input_df, company_asset_sum, fixed_income_enhance_type_list):
     output_dict = {"产品数量": dict(), "产品规模": dict(), "产品规模占比": dict(), "产品系列名称": dict()}
 
     for enhance_type in fixed_income_enhance_type_list:
-        output_dict["产品数量"][enhance_type] = len(input_df[(input_df['InvestmentType'] == '固定收益类') & (input_df['enhance_type'] == enhance_type)])
-        output_dict["产品规模"][enhance_type] = input_df[(input_df['InvestmentType'] == '固定收益类') & (input_df['enhance_type'] == enhance_type)]['AssetValue'].sum()
+        enhance_filter = get_enhance_filter(input_df, enhance_type)
+
+        output_dict["产品数量"][enhance_type] = len(input_df[(input_df['InvestmentType'] == '固定收益类') & enhance_filter])
+        output_dict["产品规模"][enhance_type] = input_df[(input_df['InvestmentType'] == '固定收益类') & enhance_filter]['AssetValue'].sum()
         if company_asset_sum != 0:
             output_dict["产品规模占比"][enhance_type] = output_dict["产品规模"][enhance_type] / company_asset_sum
         else:
             output_dict["产品规模占比"][enhance_type] = 0
 
         # 取top3产品名称
-        grouped = input_df[(input_df['InvestmentType'] == '固定收益类') & (input_df['enhance_type'] == enhance_type)].groupby('set')
+        grouped = input_df[(input_df['InvestmentType'] == '固定收益类') & enhance_filter].groupby('set')
         sorted_product = list(grouped[['AssetValue']].sum().sort_values(by='AssetValue').index)
         if '其他' in sorted_product:
             sorted_product.remove('其他')
@@ -35,13 +47,14 @@ def cal_fixed_income_company_ratio(input_df, fixed_income_enhance_type_list):
     res_list = []
     input_df = input_df[(input_df['InvestmentType'] == '固定收益类')]
 
-    # 除了'其他'类
     for enhance_type in fixed_income_enhance_type_list:
-        enhance_type_df = input_df[(input_df['enhance_type'] == enhance_type)]
+        enhance_filter = get_enhance_filter(input_df, enhance_type)
+
+        enhance_type_df = input_df[enhance_filter]
         enhance_type_asset_sum = enhance_type_df['AssetValue'].sum()
         grouped = enhance_type_df.groupby('CompanyName')
         for group_name in list(grouped.groups.keys()):
-            company_asset_ratio = input_df[(input_df['enhance_type'] == enhance_type) & (input_df['CompanyName'] == group_name)]['AssetValue'].sum() / enhance_type_asset_sum
+            company_asset_ratio = input_df[enhance_filter & (input_df['CompanyName'] == group_name)]['AssetValue'].sum() / enhance_type_asset_sum
             output_dict = {'公司名称': group_name, '产品类别': enhance_type, '同类市场占比': company_asset_ratio}
             res_list.append(output_dict)
 
@@ -60,12 +73,22 @@ def fixed_income_type_reflect(input):
     input_df = input.copy()
     # 对具体的固收增强产品做映射
     # 注：固收+(其他)映射为固收增强（未披露）；固收+(其他)为投资了“其他”类资产的产品
-    asset_name_reflect_dict = {'纯债': '固收（纯债）', '固收+(权益)': '固收增强（权益）', '固收+(非标)': '固收增强（非标）',
+    asset_name_reflect_dict = {'纯债': '固收（纯债）',
+                               '固收+(权益)': '固收增强（权益）',
+                               '固收+(含权基金)': '└其中:含权基金', '固收+(含权基金,非标)': '└其中:含权基金',
+                               '固收+(基金)': '固收增强（基金）',
+                               '固收+(非标)': '固收增强（非标）',
+
                                '固收+(权益,非标)': '固收增强（多资产）', '固收+(权益,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,非标)': '固收增强（多资产）',
                                '固收+(衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,衍生品)': '固收增强（多资产）', '固收+(QDII,衍生品)': '固收增强（多资产）',
                                '固收+(QDII,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,非标)': '固收增强（多资产）',
-                               '固收+(衍生品)': '固收增强（衍生品）', '固收+(权益,衍生品)': '固收增强（衍生品）',
-                               '固收+(QDII)': '固收增强（QDII）', '固收+(QDII,权益)': '固收增强（QDII）', '固收+(其他)': '固收增强（未披露）', '底层数据未披露': '固收增强（未披露）'}
+                               '固收+(QDII,含权基金,非标)': '固收增强（多资产）', '固收+(QDII,含权基金,衍生品,非标)': '固收增强（多资产）',
+                               '固收+(含权基金,衍生品,非标)': '固收增强（多资产）',
+
+                               '固收+(衍生品)': '固收增强（衍生品）', '固收+(权益,衍生品)': '固收增强（衍生品）', '固收+(含权基金,衍生品)': '固收增强（衍生品）',
+
+                               '固收+(QDII)': '固收增强（QDII）', '固收+(QDII,权益)': '固收增强（QDII）', '固收+(QDII,含权基金)': '固收增强（QDII）',
+                               '固收+(其他)': '固收增强（未披露）', '底层数据未披露': '固收增强（未披露）'}
     enhance_type = input_df['enhance_type_asset']
     enhance_type_reflect = [asset_name_reflect_dict[x] for x in enhance_type]
     input_df['enhance_type'] = enhance_type_reflect
@@ -83,8 +106,8 @@ if __name__ == '__main__':
     df = preprocess(df)
 
     enhance_type_res_list = []
-    fixed_income_enhance_type_list = ['固收（纯债）', '固收增强（权益）', '固收增强（非标）', '固收增强（多资产）', '固收增强（衍生品）',
-                                      '固收增强（QDII）', '固收增强（未披露）']
+    fixed_income_enhance_type_list = ['固收（纯债）', '固收增强（非标）', '固收增强（权益）', '└其中:含权基金', '固收增强（基金）',
+                                      '固收增强（衍生品）', '固收增强（QDII）', '固收增强（多资产）', '固收增强（未披露）']
     # 对固收增强类型进行归类
     df = fixed_income_type_reflect(df)
 

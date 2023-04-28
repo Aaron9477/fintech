@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     whether_has_equity = []
     for value in value_list:
-        if value > 0:
+        if value > 5:
             whether_has_equity.append(1)
         else:
             whether_has_equity.append(0)
