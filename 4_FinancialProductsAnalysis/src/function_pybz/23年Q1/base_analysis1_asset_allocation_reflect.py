@@ -61,7 +61,7 @@ def cal_non_standard_asset_sum(input_df):
     df_res = pd.DataFrame(data=res_list, columns=col_name)
 
     df_res['non_std_asset_ratio'] = np.where(df_res['actual_proportion_sum'].isnull(),
-                                             df_res['actual_proportion_sum'], df_res['actual_proportion_cal_myself_sum'])
+                                             df_res['actual_proportion_cal_myself_sum'], df_res['actual_proportion_sum'])
 
     return df_res[['FinProCode', 'non_std_asset_ratio']]
 
@@ -81,12 +81,12 @@ if __name__ == '__main__':
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230314.csv'
     elif args.statistics_date == '2022-12-31':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年四季报_230424.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230424.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年四季报_230503.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230503.csv'
     elif args.statistics_date == '2023-03-31':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230425.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230425.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230503.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230503.csv'
     else:
         raise ValueError
 

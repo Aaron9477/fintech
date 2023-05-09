@@ -102,7 +102,7 @@ def cal_non_standard_asset_sum(input_df):
     df_res = pd.DataFrame(data=res_list, columns=col_name)
 
     df_res['non_std_asset_ratio'] = np.where(df_res['proportion_of_product_sum'].isnull(),
-                                             df_res['proportion_of_product_sum'], df_res['proportion_of_product_cal_myself_sum'])
+                                             df_res['proportion_of_product_cal_myself_sum'], df_res['proportion_of_product_sum'])
 
     return df_res[['FinProCode', 'non_std_asset_ratio']]
 

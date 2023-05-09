@@ -61,17 +61,17 @@ def cal_non_standard_asset_sum(input_df):
     df_res = pd.DataFrame(data=res_list, columns=col_name)
 
     df_res['non_std_asset_ratio'] = np.where(df_res['actual_proportion_sum'].isnull(),
-                                             df_res['actual_proportion_sum'], df_res['actual_proportion_cal_myself_sum'])
+                                             df_res['actual_proportion_cal_myself_sum'], df_res['actual_proportion_sum'])
 
     return df_res[['FinProCode', 'non_std_asset_ratio']]
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--raw_asset_file', type=str, help='raw_asset_file', default='../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0930.csv')
-    parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230314.csv')
+    parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../../data_pybz/大类资产映射划分_230227.xlsx')
+    parser.add_argument('--raw_asset_file', type=str, help='raw_asset_file', default='../../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv')
+    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../../data_pybz/pyjy_bank_wealth_product_0930.csv')
+    parser.add_argument('--non_standard_file', type=str, help='non_standard_file', default='../../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230314.csv')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
 
     args = parser.parse_args()

@@ -130,7 +130,7 @@ def choose_product_mother_son(input_df):
 def get_product_exist(input, statistics_date):
     input_df = input.copy()
 
-    input_df = input_df[(((input_df['MaturityDate'].isnull()) | (input_df['MaturityDate'] > statistics_date)))
+    input_df = input_df[((input_df['MaturityDate'].isnull()) | (input_df['MaturityDate'] > statistics_date))
                         & (input_df['product_establish_date'] < statistics_date)]
     return input_df
 

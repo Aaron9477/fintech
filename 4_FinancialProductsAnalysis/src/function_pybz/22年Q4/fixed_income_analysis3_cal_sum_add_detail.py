@@ -221,7 +221,7 @@ if __name__ == '__main__':
         all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
         series_name_file = '../../data_pybz/out5.xlsx'
     elif args.statistics_date == '2022-12-31':
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
         series_name_file = '../../data_pybz/out5-22q4.xlsx'
     elif args.statistics_date == '2023-03-31':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'

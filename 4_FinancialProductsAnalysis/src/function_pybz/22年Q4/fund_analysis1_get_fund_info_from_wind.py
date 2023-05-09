@@ -80,10 +80,10 @@ if __name__ == '__main__':
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
         all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
     elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230424.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230503.csv'
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
     elif args.statistics_date == '2023-03-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230425.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230503.csv'
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
     else:
         raise ValueError
