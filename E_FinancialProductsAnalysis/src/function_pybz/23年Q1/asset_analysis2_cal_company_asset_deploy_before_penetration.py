@@ -7,6 +7,7 @@ import numpy as np
 import argparse
 import datetime
 import copy
+
 from func import get_product_exist
 
 

@@ -5,9 +5,9 @@
 import pandas as pd
 import numpy as np
 import argparse
-from func import get_trading_day
 from WindPy import w
 
+from func import get_trading_day
 
 
 def judge_equity_fund(df):

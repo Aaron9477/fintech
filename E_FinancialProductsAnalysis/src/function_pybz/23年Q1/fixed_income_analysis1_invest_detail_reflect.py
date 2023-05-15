@@ -11,7 +11,7 @@ import numpy as np
 import argparse
 
 from func import choose_product_mother_son, get_product_exist
-from ..reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 # 获取资产一二级类目的映射关系

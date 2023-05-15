@@ -5,14 +5,9 @@
 import pandas as pd
 import numpy as np
 import argparse
-import os
-import sys
-print(sys.path)
-sys.path.append(os.path.abspath('D:\\Project\\InternalTools\\4_FinancialProductsAnalysis\\src\\function_pybz'))
-print(sys.path)
 
 from func import choose_product_mother_son, get_product_exist
-from \4_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 # primary_type_reflect_dict = {'代客境外理财投资qdii': 'QDII', '商品类': '商品及衍生品', '基金': '', '委外投资————协议方式': '资管产品',

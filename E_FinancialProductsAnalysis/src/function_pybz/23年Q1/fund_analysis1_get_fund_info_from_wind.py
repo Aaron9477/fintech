@@ -10,7 +10,7 @@ import argparse
 import datetime
 
 from func import get_trading_day
-from ..reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 #显示所有的列
 pd.set_option('display.max_columns', None)

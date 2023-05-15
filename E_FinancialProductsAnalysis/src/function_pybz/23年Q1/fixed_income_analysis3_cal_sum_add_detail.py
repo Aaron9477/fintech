@@ -9,7 +9,7 @@ from enum import Enum
 import datetime, time
 
 from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
-from ..reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 # 前处理模块 部分规则由智妍提供

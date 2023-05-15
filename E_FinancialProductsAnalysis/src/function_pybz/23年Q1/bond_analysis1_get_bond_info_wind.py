@@ -10,7 +10,7 @@ import argparse
 import datetime
 
 from func import bond_analysis_df_preprocess, get_trading_day, choose_product_mother_son, get_product_exist
-from ..reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 target_feature = ["fullname", "amount", "windl1type", "windl2type", "municipalbond", "municipalbondYY",

@@ -8,7 +8,7 @@ import numpy as np
 import argparse
 from enum import Enum
 
-from ..reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 class FixedIncomeDataType(Enum):
