@@ -67,8 +67,8 @@ def df_preprocess(input_df, statistics_date):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
-    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     parser.add_argument('--score_file', type=str, help='score_file', default='全部基金量化打分排名.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财产品重仓基金明细表.xlsx')
     args = parser.parse_args()

@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
 
     if args.statistics_date == '2022-09-30':
@@ -44,17 +44,17 @@ if __name__ == '__main__':
         asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年四季报_230503.csv'
     elif args.statistics_date == '2023-03-31':
         target_file = '../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_23年Q1_230503.csv'
+        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_23年Q1_230513.csv'
     else:
         raise ValueError
+
+    end_date = '20230331'
 
     bank_wealth_product_df = pd.read_csv(target_file)
     asset_portfolio_df = pd.read_csv(asset_portfolio_file)
 
     # 筛选存续产品&非子产品：属于理财半年报投资方向统计范畴
     bank_wealth_product_df = df_preprocess(bank_wealth_product_df, bank_wealth_product_df, args.statistics_date)
-
-    end_date = '20221231'
 
     time_col_list = ['product_establish_date', 'MaturityDate']
     for time_col in time_col_list:

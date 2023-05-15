@@ -89,8 +89,8 @@ def judge_enhance_type(input):
     input_df = input.copy()
 
     equity_asset_list = ['权益类', '前十大_权益类']
-    commodities_derivatives_asset_list = ['商品及衍生品']
-    non_standard_asset_list = ['非标资产', '前十大_非标资产']
+    commodities_derivatives_asset_list = ['商品及衍生品', '前十大_商品及衍生品']
+    non_standard_asset_list = ['非标资产', '前十大_非标资产', '非标资产投资比例']
     QDII_list = ['QDII', '前十大_QDII']
     enhance_type_list = []
 

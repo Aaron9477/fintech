@@ -39,8 +39,8 @@ def get_fund_type(row):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
-    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财投资公募穿透后统计.xlsx')
     args = parser.parse_args()
 

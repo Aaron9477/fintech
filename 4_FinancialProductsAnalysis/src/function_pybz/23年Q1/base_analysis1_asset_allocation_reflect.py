@@ -50,18 +50,14 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
 # 统计理财产品在非标资产的总投资比例
 def cal_non_standard_asset_sum(input_df):
-    grouped = input_df.groupby(['FinProCode']).agg({'actual_proportion': sum, 'actual_proportion_cal_myself': sum})
-    actual_proportion_list = list(grouped['actual_proportion'].items())
-    actual_proportion_cal_myself_list = list(grouped['actual_proportion_cal_myself'].items())
+    grouped = input_df.groupby(['FinProCode']).agg({'proportion_of_product': sum})
+    actual_proportion_list = list(grouped['proportion_of_product'].items())
     res_list = []
     for i in range(len(actual_proportion_list)):
-        res_list.append([actual_proportion_list[i][0], actual_proportion_list[i][1], actual_proportion_cal_myself_list[i][1]])
+        res_list.append([actual_proportion_list[i][0], actual_proportion_list[i][1]])
 
-    col_name = ['FinProCode', 'actual_proportion_sum', 'actual_proportion_cal_myself_sum']
+    col_name = ['FinProCode', 'non_std_asset_ratio']
     df_res = pd.DataFrame(data=res_list, columns=col_name)
-
-    df_res['non_std_asset_ratio'] = np.where(df_res['actual_proportion_sum'].isnull(),
-                                             df_res['actual_proportion_cal_myself_sum'], df_res['actual_proportion_sum'])
 
     return df_res[['FinProCode', 'non_std_asset_ratio']]
 
@@ -85,8 +81,8 @@ if __name__ == '__main__':
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230503.csv'
     elif args.statistics_date == '2023-03-31':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230503.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230503.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230513.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230513.csv'
     else:
         raise ValueError
 
