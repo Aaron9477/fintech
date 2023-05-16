@@ -41,7 +41,7 @@ def get_major_assets_detail(row, reflact_dict):
 # 前处理模块
 def df_preprocess(input_df, all_data_df, statistics_date):
     # 筛选存续期产品
-    all_data_df = get_product_exist(all_data_df, statistics_date)
+    input_df = get_product_exist(input_df, statistics_date)
 
     # 筛选子产品 all_data_df
     all_data_df = choose_product_mother_son(all_data_df)
@@ -67,7 +67,7 @@ def cal_non_standard_asset_sum(input_df):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-06-30')
 
     args = parser.parse_args()
     reflect_file = args.reflect_file

@@ -1,10 +1,10 @@
 # -*- coding=utf-8 -*-
 # --------------------------------
-# @Time      : 2023/5/5 11:07
-# @Author    : Wangyd5
+# @Time      : 2023/5/15 11:07
+# @Author    : Wangyz5
 # @File      : check_regular_report_complete
 # @Project   : sublicai
-# @Function  ：检查理财子是否披露完全定期公告
+# @Function  ：检查理财子产品季报披露比例、应披露比例
 # --------------------------------
 
 import os
@@ -33,22 +33,31 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--input_file', type=str, help='input_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--reflect_file', type=str, help='reflect_file', default='../data_pybz/大类资产映射划分_230227.xlsx')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-06-30')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    parser.add_argument('--output_file', type=str, help='output_file', default='产品是否披露季报明细.xlsx')
     args = parser.parse_args()
 
-    if args.statistics_date == '2022-09-30':
+    if args.statistics_date == '2022-06-30':
+        target_file = '../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
+        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年二季报_230515.csv'
+    elif args.statistics_date == '2022-09-30':
         target_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
         asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv'
     elif args.statistics_date == '2022-12-31':
         target_file = '../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
-        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年四季报_230503.csv'
+        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年四季报_230515.csv'
     elif args.statistics_date == '2023-03-31':
         target_file = '../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_23年Q1_230513.csv'
+        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_23年Q1_230515.csv'
     else:
         raise ValueError
 
-    end_date = '20230331'
+    output_file = args.output_file.split('.')[0] + '_' + args.statistics_date + '.xlsx'
+
+    end_date = args.statistics_date.replace("-", "")
 
     bank_wealth_product_df = pd.read_csv(target_file)
     asset_portfolio_df = pd.read_csv(asset_portfolio_file)
@@ -64,12 +73,14 @@ if __name__ == '__main__':
     bank_wealth_product_df['是否已发季报'] = np.nan
 
     # 筛选产品是否需要发季报
+    # 90个工作日，暂时以120自然日替代
     bank_wealth_product_df['product_establish_date_plus_90'] = bank_wealth_product_df['product_establish_date'].map(
-        lambda x: x + datetime.timedelta(days=90))
+        lambda x: x + datetime.timedelta(days=120))
     bank_wealth_product_df['MaturityDate_minus_90'] = bank_wealth_product_df['MaturityDate'].map(
-        lambda x: x - datetime.timedelta(days=90))
+        lambda x: x - datetime.timedelta(days=120))
     bank_wealth_product_df.loc[(bank_wealth_product_df['product_establish_date_plus_90'] <= end_date) &
-                               (bank_wealth_product_df['MaturityDate_minus_90'] >= end_date), '是否需要发季报'] = 1
+                               (bank_wealth_product_df['MaturityDate_minus_90'] >= end_date) &
+                               (bank_wealth_product_df['RaisingType'] == '公募'), '是否需要发季报'] = 1
     bank_wealth_product_df['是否需要发季报'].fillna(0, inplace=True)
 
     # 是否发了季报
@@ -78,7 +89,7 @@ if __name__ == '__main__':
     bank_wealth_product_df.loc[bank_wealth_product_df['RegistrationCode'].isin(asset_portfolio_regis_code), '是否已发季报'] = 1
     bank_wealth_product_df['是否已发季报'].fillna(0, inplace=True)
 
-    bank_wealth_product_df.to_excel('test2.xlsx')
+    bank_wealth_product_df.to_excel(output_file)
 
     # info_df_exclude = info_df[~info_df['RegistrationCode'].isin(asset_portfolio_regis_code)]
     # info_df_exclude = info_df_exclude.sort_values(['CompanyName','AssetValue'],ascending=[False,False])

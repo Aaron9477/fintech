@@ -35,6 +35,15 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     # 筛选报告时间
     output_df = choose_report_detail_table(statistics_date, output_df)
 
+    # 筛选存续期产品
+    ActMaturityDate = list(output_df['ActMaturityDate'])
+    ProductMaturityDate = list(output_df['ProductMaturityDate'])
+    for i in range(len(ProductMaturityDate)):
+        if not isinstance(ActMaturityDate[i], str) and np.isnan(ActMaturityDate[i]):
+            ActMaturityDate[i] = ProductMaturityDate[i]
+    output_df['ActMaturityDate'] = ActMaturityDate
+    output_df = output_df[(output_df['ActMaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
+
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(all_data_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
@@ -47,15 +56,6 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     # 筛选基金和过滤基金代码为空的数据
     output_df = output_df[(output_df['InvestObject'] == 'FCC0000001WK') & (output_df['SecuCode'].notnull())]
-
-    # 筛选存续期产品
-    ActMaturityDate = list(output_df['ActMaturityDate'])
-    ProductMaturityDate = list(output_df['ProductMaturityDate'])
-    for i in range(len(ProductMaturityDate)):
-        if not isinstance(ActMaturityDate[i], str) and np.isnan(ActMaturityDate[i]):
-            ActMaturityDate[i] = ProductMaturityDate[i]
-    output_df['ActMaturityDate'] = ActMaturityDate
-    output_df = output_df[(output_df['ActMaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
 
     return output_df
 

@@ -8,7 +8,9 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
-from func import choose_report_detail_table
+
+from func import get_trading_day
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 #显示所有的列
 pd.set_option('display.max_columns', None)
@@ -31,6 +33,9 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     output_df = input_df.copy()
 
+    # 筛选存续期产品
+    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
+
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(all_data_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
@@ -46,9 +51,6 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     # 合并基金代码，筛选代码非空的基金
     output_df = output_df[(output_df['SecuCode'].notnull())]
-
-    # 筛选存续期产品
-    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
 
     return output_df
 
@@ -71,14 +73,17 @@ def split_list_average_n(origin_list, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
-    parser.add_argument('--input_file', type=str, help='input_file', default='../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv')
-    parser.add_argument('--all_data_file', type=str, help='all_data_file', default='../data_pybz/pyjy_bank_wealth_product_0306.csv')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
-    df = pd.read_csv(args.input_file)
-    all_data_df = pd.read_csv(args.all_data_file)[['FinProCode', 'MaturityDate',
+
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
+
+    trading_day = get_trading_day(statistics_date)
+
+    df = pd.read_csv(top10_file)
+    all_data_df = pd.read_csv(all_data_file)[['FinProCode', 'MaturityDate',
                                                    'product_establish_date', 'RegistrationCode', 'ProductType']]
 
     # 前处理
@@ -91,19 +96,19 @@ if __name__ == '__main__':
     w.start()
     index = 0
     for feat in target_feature:
-        wind_return = w.wsd(fund_str, feat, statistics_date, statistics_date, "annualized=0;PriceAdj=F")
+        wind_return = w.wsd(fund_str, feat, trading_day, trading_day, "annualized=0;PriceAdj=F")
         fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
         value_list = [fund_value_dict[x] for x in fund_list]
         df[feature_name[index]] = value_list
         index += 1
 
-    statistics_date_before_1y = str(int(statistics_date[:4])-1) + statistics_date[4:]
-    wind_return = w.wsd(fund_str, "NAV_adj", statistics_date_before_1y, statistics_date_before_1y, "PriceAdj=F")
+    trading_day_before_1y = str(int(trading_day[:4])-1) + trading_day[4:]
+    wind_return = w.wsd(fund_str, "NAV_adj", trading_day_before_1y, trading_day_before_1y, "PriceAdj=F")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
     df['统计日一年前净值'] = value_list
 
-    wind_return = w.wsd(fund_str, "NAV_adj", statistics_date, statistics_date, "PriceAdj=F")
+    wind_return = w.wsd(fund_str, "NAV_adj", trading_day, trading_day, "PriceAdj=F")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
     df['统计日净值'] = value_list

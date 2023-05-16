@@ -46,6 +46,16 @@ def cal_company_asset_sum(input_file, statistics_date):
         RegistrationCode_mainind.append(get_main_product_ind(data_set_RegistrationCode))
     output_df = all_data_df[all_data_df.index.isin(RegistrationCode_mainind)]
 
+    # 公司名称改为全称
+    company_list = list(output_df['CompanyName'])
+    new_company_list = []
+    for i in range(len(company_list)):
+        if company_list[i] != '汇华理财有限公司':
+            new_company_list.append(company_list[i][:-6])
+        else:
+            new_company_list.append('汇华理财')
+    output_df['CompanyName'] = new_company_list
+
     company_asset_num_sum = output_df.groupby('CompanyName')['AssetValue'].sum()
     res_list = []
     for line in list(company_asset_num_sum.items()):
@@ -142,9 +152,16 @@ def code_preprocess(input_list):
     return res_list
 
 
+def get_wind_classification(row):
+    if row["type_code"].startswith("csc_mutual_fund_type"):
+        return False
+    else:
+        return True
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--score_file', type=str, help='input_file', default='全部基金量化打分排名.xlsx')
+    parser.add_argument('--score_file', type=str, help='input_file', default='../../data_pybz/公募基金3年期指标排名20230426.csv')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财子重仓基金分析.xlsx')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
@@ -159,7 +176,9 @@ if __name__ == '__main__':
 
     writer = pd.ExcelWriter(output_file)
     df = pd.read_excel(input_file)
-    score_df = pd.read_excel(score_file)
+    score_df = pd.read_csv(score_file)
+    # 只保留wind分类的打分排名
+    score_df = score_df[(score_df.apply(lambda x: get_wind_classification(x), axis=1))]
 
     df["基金代码"] = code_preprocess(df['SecuCode'].values)
 
@@ -174,7 +193,7 @@ if __name__ == '__main__':
     company_fund_asset_sum_add_company_asset.index = company_fund_asset_sum_add_company_asset.index + 1
     company_fund_asset_sum_add_company_asset.to_excel(writer, sheet_name='理财子各基金类型占比')
 
-    # 各理财子前十大基金
+    # 各理财子前五大基金
     company_fund_rank = cal_company_fund_asset_top(df)
     company_fund_rank_add_company_asset = company_fund_rank.merge(company_asset_sum_df, how='left', on='理财子公司')
     company_fund_rank_add_company_asset['基金资产占比'] = company_fund_rank_add_company_asset['基金资产规模'] / company_fund_rank_add_company_asset['公司资产总规模']
@@ -182,15 +201,14 @@ if __name__ == '__main__':
     df_tmp = df.drop_duplicates(subset='基金代码')
     company_fund_rank_add_company_asset = company_fund_rank_add_company_asset.merge(df_tmp[["基金代码", "基金二级分类"]], how="left", on="基金代码")
     # 获得基金评分与排名
-    company_fund_rank_add_company_asset['无后缀代码'] = [int(x.split('.')[0])  for x in list(company_fund_rank_add_company_asset['基金代码'])]
-    company_fund_rank_add_company_asset = company_fund_rank_add_company_asset.merge(score_df[['无后缀代码', 'TOTAL_SCORE_RANK_SHORT_TERM', '二级分类下量化打分排名']], how="left", on="无后缀代码")
-    company_fund_rank_add_company_asset = company_fund_rank_add_company_asset.drop(labels='无后缀代码', axis=1)
-    company_fund_rank_add_company_asset.rename(columns={'TOTAL_SCORE_RANK_SHORT_TERM': '二级分类下量化打分'}, inplace=True)
+    score_df['二级分类下量化打分'] = 0   # 这列没有用
+    score_df['二级分类下量化打分排名'] = score_df['annual_return_rank'].map(lambda x: x.replace("|", "/"))
+    company_fund_rank_add_company_asset = company_fund_rank_add_company_asset.merge(score_df[['fund_code', '二级分类下量化打分', '二级分类下量化打分排名']], how="left", left_on="基金代码", right_on='fund_code')
+    company_fund_rank_add_company_asset = company_fund_rank_add_company_asset.drop(labels='fund_code', axis=1)
     # 根据溪恒使用的要求，对index做+1操作
     company_fund_rank_add_company_asset.index = company_fund_rank_add_company_asset.index + 1
     company_fund_rank_add_company_asset['基金名称'] = company_fund_rank_add_company_asset['基金名称'] + "(" + company_fund_rank_add_company_asset['基金代码'] + ")"
 
-    company_fund_rank_add_company_asset['二级分类下量化打分'].fillna('-', inplace=True)
     company_fund_rank_add_company_asset['二级分类下量化打分排名'].fillna('-', inplace=True)
 
     company_fund_rank_add_company_asset.to_excel(writer, sheet_name='理财子前十大基金')

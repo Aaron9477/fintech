@@ -38,16 +38,20 @@ def get_fund_type(row):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-06-30')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财投资公募穿透后统计.xlsx')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
     output_file = args.output_file.split('.')[0] + '_' + statistics_date + '.xlsx'
 
-    if args.statistics_date == '2022-09-30':
+    if args.statistics_date == '2022-06-30':
+        asset_invest_file = '../../22年Q2/金融产品资产配置表映射后.xlsx'
+        all_data_file = '../../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
+    elif args.statistics_date == '2022-09-30':
         asset_invest_file = '../../22年Q3/金融产品资产配置表映射后.xlsx'
         all_data_file = '../../../data_pybz/pyjy_bank_wealth_product_0930.csv'
     elif args.statistics_date == '2022-12-31':
@@ -85,6 +89,8 @@ if __name__ == '__main__':
 
 
     all_data_df = pd.read_csv(all_data_file)
+
+    # 过滤子产品保留母产品
     all_data_df = df_preprocess(all_data_df, args.statistics_date)
     all_data_df = all_data_df[['FinProCode']]
 

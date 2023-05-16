@@ -51,6 +51,8 @@ def df_preprocess(input_df, statistics_date):
 
     output_df = input_df.copy()
 
+    output_df = get_product_exist(output_df, statistics_date)
+
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(output_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
@@ -59,23 +61,21 @@ def df_preprocess(input_df, statistics_date):
         RegistrationCode_mainind.append(get_main_product_ind(data_set_RegistrationCode))
     output_df = output_df[output_df.index.isin(RegistrationCode_mainind)]
 
-    output_df = get_product_exist(output_df, statistics_date)
-
     return output_df
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
-    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     parser.add_argument('--score_file', type=str, help='score_file', default='全部基金量化打分排名.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财产品重仓基金明细表.xlsx')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
     score_file = args.score_file
-    output_file = args.output_file.split('.')[0] + '_' + statistics_date + '.xlsx'
+    output_file = args.output_file.split('.')[0] + '_' + statistics_date + '2.xlsx'
 
     if args.statistics_date == '2022-09-30':
         input_file = '../../22年Q3/基金信息_2022-09-30.xlsx'

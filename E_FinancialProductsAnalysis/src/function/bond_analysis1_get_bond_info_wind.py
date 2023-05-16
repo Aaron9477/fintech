@@ -94,12 +94,12 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     input_df = input_df.copy()
     all_data_df = all_data_df.copy()
 
+    # 筛选存续期产品
+    all_data_df = get_product_exist(all_data_df, statistics_date)
+
     # 筛选子产品 all_data_df
     all_data_df = choose_product_mother_son(all_data_df)
     input_df = input_df.merge(all_data_df, how='inner', on='FinProCode')
-
-    # 筛选存续期产品
-    input_df = get_product_exist(input_df, statistics_date)
 
     # 报告筛选
     output_df = choose_report_detail_table(input_df, statistics_date)

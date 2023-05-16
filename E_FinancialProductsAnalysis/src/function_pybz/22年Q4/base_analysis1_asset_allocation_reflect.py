@@ -5,7 +5,9 @@
 import pandas as pd
 import numpy as np
 import argparse
+
 from func import choose_product_mother_son, get_product_exist
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 # primary_type_reflect_dict = {'代客境外理财投资qdii': 'QDII', '商品类': '商品及衍生品', '基金': '', '委外投资————协议方式': '资管产品',
@@ -38,12 +40,12 @@ def get_major_assets_detail(row, reflact_dict):
 
 # 前处理模块
 def df_preprocess(input_df, all_data_df, statistics_date):
+    # 筛选存续期产品
+    all_data_df = get_product_exist(all_data_df, statistics_date)
+
     # 筛选子产品 all_data_df
     all_data_df = choose_product_mother_son(all_data_df)
     input_df = input_df.merge(all_data_df, how='inner', on='FinProCode')
-
-    # 筛选存续期产品
-    input_df = get_product_exist(input_df, statistics_date)
 
     return input_df
 
@@ -71,20 +73,7 @@ if __name__ == '__main__':
     reflect_file = args.reflect_file
     statistics_date = args.statistics_date
 
-    if args.statistics_date == '2022-09-30':
-        all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年三季报_230314.csv'
-    elif args.statistics_date == '2022-12-31':
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年四季报_230503.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230503.csv'
-    elif args.statistics_date == '2023-03-31':
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230503.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230503.csv'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     reflect_df = pd.read_excel(reflect_file, sheet_name='资产配置表映射关系')
     try:
@@ -103,6 +92,8 @@ if __name__ == '__main__':
 
     # 统计大类资产映射表不能覆盖的字段
     asset_name_not_in_dict = dict()
+
+    all_data_df = all_data_df[(all_data_df['CompanyName'] == '中邮理财')]
 
     # 数据前处理
     raw_asset_data = df_preprocess(raw_asset_data, all_data_df, statistics_date)

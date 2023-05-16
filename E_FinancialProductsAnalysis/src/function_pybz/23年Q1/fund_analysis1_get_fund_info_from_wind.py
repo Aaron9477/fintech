@@ -33,6 +33,9 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     output_df = input_df.copy()
 
+    # 筛选存续期产品
+    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
+
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(all_data_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
@@ -48,9 +51,6 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     # 合并基金代码，筛选代码非空的基金
     output_df = output_df[(output_df['SecuCode'].notnull())]
-
-    # 筛选存续期产品
-    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
 
     return output_df
 

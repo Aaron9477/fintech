@@ -9,6 +9,8 @@ import numpy as np
 import argparse
 from enum import Enum
 
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
+
 
 def get_final_enhance_type(row):
     # 从23q1到22q3先依次找非空且不是'底层数据未披露'的数据
@@ -122,16 +124,9 @@ if __name__ == '__main__':
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
 
-    if args.statistics_date == '2022-09-30':
-        target_file = '../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        target_file = '../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
-    elif args.statistics_date == '2023-03-31':
-        target_file = '../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
-    target_df = pd.read_csv(target_file)
+    target_df = pd.read_csv(all_data_file)
     target_df = get_raw_fix_enhance_data(target_df)
     target_df = get_raw_equity_data(target_df)
 

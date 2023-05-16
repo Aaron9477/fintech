@@ -14,12 +14,12 @@ from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_fi
 
 # 前处理模块 部分规则由智妍提供
 def df_preprocess(all_data_df, statistics_date):
-    # 筛选子产品 all_data_df
-    screen_df = choose_product_mother_son(all_data_df)['FinProCode']
-    output_df = all_data_df.merge(screen_df, how='inner', on='FinProCode')
-
     # 筛选存续期产品
-    output_df = get_product_exist(output_df, statistics_date)
+    output_df = get_product_exist(all_data_df, statistics_date)
+
+    # 筛选子产品 all_data_df
+    screen_df = choose_product_mother_son(output_df)['FinProCode']
+    output_df = output_df.merge(screen_df, how='inner', on='FinProCode')
 
     return output_df
 

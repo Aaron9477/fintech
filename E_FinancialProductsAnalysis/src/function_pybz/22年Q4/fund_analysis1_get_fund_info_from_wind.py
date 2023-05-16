@@ -8,7 +8,9 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
+
 from func import get_trading_day
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 #显示所有的列
 pd.set_option('display.max_columns', None)
@@ -31,6 +33,9 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     output_df = input_df.copy()
 
+    # 筛选存续期产品
+    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
+
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(all_data_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
@@ -46,9 +51,6 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     # 合并基金代码，筛选代码非空的基金
     output_df = output_df[(output_df['SecuCode'].notnull())]
-
-    # 筛选存续期产品
-    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
 
     return output_df
 
@@ -76,17 +78,7 @@ if __name__ == '__main__':
 
     statistics_date = args.statistics_date
 
-    if args.statistics_date == '2022-09-30':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230503.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
-    elif args.statistics_date == '2023-03-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230503.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     trading_day = get_trading_day(statistics_date)
 
