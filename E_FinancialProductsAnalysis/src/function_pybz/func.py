@@ -153,3 +153,14 @@ def get_trading_day(statistics_date):
     else:
         raise ValueError
     return trading_day
+
+
+def shorter_company_name(all_data_df, col_name):
+    company_list = list(all_data_df[col_name])
+    new_company_list = []
+    for i in range(len(company_list)):
+        if company_list[i] != '汇华理财有限公司':
+            new_company_list.append(company_list[i][:-6])
+        else:
+            new_company_list.append('汇华理财')
+    all_data_df[col_name] = new_company_list

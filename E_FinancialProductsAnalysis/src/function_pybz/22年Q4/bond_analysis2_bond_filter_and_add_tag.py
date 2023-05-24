@@ -8,6 +8,8 @@ import numpy as np
 import argparse
 import datetime
 
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
+
 #显示所有的列
 pd.set_option('display.max_columns', None)
 
@@ -193,14 +195,7 @@ if __name__ == '__main__':
     output_file = args.output_file
     statistics_date = args.statistics_date
 
-    if args.statistics_date == '2022-09-30':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-    elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230503.csv'
-    elif args.statistics_date == '2023-03-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230503.csv'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     writer = pd.ExcelWriter(output_file)
     df = pd.read_excel(input_file)

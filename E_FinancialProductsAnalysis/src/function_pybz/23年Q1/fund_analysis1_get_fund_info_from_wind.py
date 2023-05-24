@@ -9,7 +9,7 @@ import numpy as np
 import argparse
 import datetime
 
-from func import get_trading_day
+from func import get_trading_day, get_product_exist
 from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 #显示所有的列
@@ -34,7 +34,7 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     output_df = input_df.copy()
 
     # 筛选存续期产品
-    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
+    all_data_df = get_product_exist(all_data_df, statistics_date)
 
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(all_data_df['RegistrationCode'].dropna()))

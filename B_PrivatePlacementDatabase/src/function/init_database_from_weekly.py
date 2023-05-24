@@ -181,7 +181,7 @@ def update_database(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='输入文件', default='../../tests/重点观察私募周报（2023年第13周，2023.03.31）.xlsx')
+    parser.add_argument('--input_file', type=str, help='输入文件', default='../../tests/重点观察私募周报（2023年第18周，2023.05.05）.xlsx')
     parser.add_argument('--output_file', type=str, help='输出文件', default='test2.db')
     parser.add_argument('--is_create_new_database', type=int, help='是否新建数据库', default=0)
     parser.add_argument('--is_delete_old_database', type=int, help='是否删除老数据库', default=0)

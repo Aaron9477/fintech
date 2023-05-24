@@ -6,8 +6,10 @@ import pandas as pd
 import numpy as np
 import argparse
 from enum import Enum
-from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
 import datetime, time
+
+from func import choose_report_asset_table, choose_product_mother_son, get_product_exist
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 # 前处理模块 部分规则由智妍提供
@@ -89,8 +91,8 @@ def judge_enhance_type(input):
     input_df = input.copy()
 
     equity_asset_list = ['权益类', '前十大_权益类']
-    commodities_derivatives_asset_list = ['商品及衍生品']
-    non_standard_asset_list = ['非标资产', '前十大_非标资产']
+    commodities_derivatives_asset_list = ['商品及衍生品', '前十大_商品及衍生品']
+    non_standard_asset_list = ['非标资产', '前十大_非标资产', '非标资产投资比例']
     QDII_list = ['QDII', '前十大_QDII']
     enhance_type_list = []
 
@@ -213,26 +215,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     asset_allocation_file = args.asset_allocation_file
-    top10_file = args.top10_file
+    top10_fix_income_enhance_analysis_file = args.top10_fix_income_enhance_analysis_file
     fund_whether_has_equity_file = args.fund_whether_has_equity_file
     statistics_date = args.statistics_date
 
-    if args.statistics_date == '2022-09-30':
-        all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
-        series_name_file = '../../data_pybz/out5.xlsx'
-    elif args.statistics_date == '2022-12-31':
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
-        series_name_file = '../../data_pybz/out5-22q4.xlsx'
-    elif args.statistics_date == '2023-03-31':
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        series_name_file = '../../data_pybz/out5-23q1.xlsx'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     all_data_df = pd.read_csv(all_data_file)
     asset_allocation_df = pd.read_excel(asset_allocation_file)
     series_name_df = pd.read_excel(series_name_file)
-    top10_df = pd.read_excel(top10_file)
+    top10_fix_income_enhance_analysis_df = pd.read_excel(top10_fix_income_enhance_analysis_file)
     fund_whether_has_equity_df = pd.read_excel(fund_whether_has_equity_file)
 
     # 计算理财产品资产配置表投资产的比例
@@ -243,7 +235,7 @@ if __name__ == '__main__':
 
     all_data_df = all_data_df.merge(asset_allocation_ratio_df[[
         'FinProCode', '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产', '公募基金']], how='left', on='FinProCode')
-    all_data_df = all_data_df.merge(top10_df[['FinProCode', '前十大_权益类', '前十大_非标资产', '前十大_商品及衍生品', '前十大_QDII',
+    all_data_df = all_data_df.merge(top10_fix_income_enhance_analysis_df[['FinProCode', '前十大_权益类', '前十大_非标资产', '前十大_商品及衍生品', '前十大_QDII',
                                               '非标资产投资比例']], how='left', on='FinProCode')
     all_data_df = all_data_df.merge(fund_whether_has_equity_df[['FinProCode', '资产明细是否有含权基金']], how='left', on='FinProCode')
 

@@ -48,7 +48,7 @@ if __name__ == '__main__':
         asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年三季报_230314.csv'
     elif args.statistics_date == '2022-12-31':
         target_file = '../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
-        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年四季报_230515.csv'
+        asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_22年四季报_230518.csv'
     elif args.statistics_date == '2023-03-31':
         target_file = '../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
         asset_portfolio_file = '../data_pybz/pybz_金融产品资产配置_23年Q1_230515.csv'

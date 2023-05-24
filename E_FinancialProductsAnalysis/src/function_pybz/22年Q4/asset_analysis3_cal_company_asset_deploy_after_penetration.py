@@ -7,8 +7,9 @@ import numpy as np
 import argparse
 import datetime
 import copy
-from func import get_product_exist
 import openpyxl
+
+from func import get_product_exist
 
 
 def cal_fixed_income_enhance_type(input_df, company_asset_sum):

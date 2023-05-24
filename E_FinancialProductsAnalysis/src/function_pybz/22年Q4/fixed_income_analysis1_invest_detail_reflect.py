@@ -9,7 +9,9 @@ Created on Tue Dec 01 17:20:45 2022
 import pandas as pd
 import numpy as np
 import argparse
+
 from func import choose_product_mother_son, get_product_exist
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 # 获取资产一二级类目的映射关系
@@ -23,7 +25,7 @@ def get_reflect_dict(input_df):
 
 def df_preprocess(input_df, all_data_df, statistics_date):
     # 筛选存续期产品
-    input_df = get_product_exist(input_df, statistics_date)
+    all_data_df = get_product_exist(all_data_df, statistics_date)
 
     # 筛选子产品 all_data_df
     all_data_df = choose_product_mother_son(all_data_df)
@@ -127,23 +129,14 @@ if __name__ == '__main__':
 
     statistics_date = args.statistics_date
     reflect_file = args.reflect_file
-    non_standard_file = args.non_standard_file
-    if args.statistics_date == '2022-09-30':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230503.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
-    elif args.statistics_date == '2023-03-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230503.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-    else:
-        raise ValueError
+    non_standard_statistics_file = args.non_standard_statistics_file
+
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     reflect_df = pd.read_excel(reflect_file, sheet_name='前10大持仓表映射关系')
     top10_df = pd.read_csv(top10_file)
     all_data_df = pd.read_csv(all_data_file)
-    non_standard_sum_df = pd.read_excel(non_standard_file)
+    non_standard_sum_df = pd.read_excel(non_standard_statistics_file)
 
     # 映射关系
     reflact_dict = get_reflect_dict(reflect_df)

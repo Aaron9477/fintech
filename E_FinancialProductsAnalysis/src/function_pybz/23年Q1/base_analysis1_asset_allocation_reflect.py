@@ -61,6 +61,9 @@ def cal_non_standard_asset_sum(input_df):
     col_name = ['FinProCode', 'non_std_asset_ratio']
     df_res = pd.DataFrame(data=res_list, columns=col_name)
 
+    df_res['non_std_asset_ratio'] =  df_res['non_std_asset_ratio'] / 100.0
+    df_res['non_std_asset_ratio'].replace(0, 99, inplace=True)
+
     return df_res[['FinProCode', 'non_std_asset_ratio']]
 
 

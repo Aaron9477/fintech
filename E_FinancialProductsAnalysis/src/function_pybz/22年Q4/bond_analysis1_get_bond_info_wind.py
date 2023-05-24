@@ -8,7 +8,9 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
+
 from func import bond_analysis_df_preprocess, get_trading_day, choose_product_mother_son, get_product_exist
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 target_feature = ["fullname", "amount", "windl1type", "windl2type", "municipalbond", "municipalbondYY",
@@ -73,19 +75,7 @@ if __name__ == '__main__':
     output_file = args.output_file
     trading_day = get_trading_day(statistics_date)
 
-    if args.statistics_date == '2022-09-30':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年三季报_230314.csv'
-        all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
-    elif args.statistics_date == '2022-12-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年四季报_230503.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0424.csv'
-        # 221231是节假日，无数据
-        statistics_date = '2022-12-30'
-    elif args.statistics_date == '2023-03-31':
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230503.csv'
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     df = pd.read_csv(top10_file)
     all_data_df = pd.read_csv(all_data_file)

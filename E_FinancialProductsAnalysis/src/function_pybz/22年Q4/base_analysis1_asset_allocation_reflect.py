@@ -61,6 +61,9 @@ def cal_non_standard_asset_sum(input_df):
     col_name = ['FinProCode', 'non_std_asset_ratio']
     df_res = pd.DataFrame(data=res_list, columns=col_name)
 
+    df_res['non_std_asset_ratio'] =  df_res['non_std_asset_ratio'] / 100.0
+    df_res['non_std_asset_ratio'].replace(0, 99, inplace=True)
+
     return df_res[['FinProCode', 'non_std_asset_ratio']]
 
 
@@ -92,8 +95,6 @@ if __name__ == '__main__':
 
     # 统计大类资产映射表不能覆盖的字段
     asset_name_not_in_dict = dict()
-
-    all_data_df = all_data_df[(all_data_df['CompanyName'] == '中邮理财')]
 
     # 数据前处理
     raw_asset_data = df_preprocess(raw_asset_data, all_data_df, statistics_date)

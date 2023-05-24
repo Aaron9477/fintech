@@ -3,11 +3,12 @@
     固收+/大类资产统计分析步骤二：计算各个理财产品大类资产的配比情况
 """
 import copy
-
 import pandas as pd
 import numpy as np
 import argparse
 from enum import Enum
+
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
 
 
 class FixedIncomeDataType(Enum):
@@ -188,17 +189,7 @@ if __name__ == '__main__':
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     args = parser.parse_args()
 
-    if args.statistics_date == '2022-09-30':
-        target_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
-        series_name_file = '../../data_pybz/out5.xlsx'
-    elif args.statistics_date == '2022-12-31':
-        target_file = '../../data_pybz/bank_wealth_product_base_pyjy_1231.csv'
-        series_name_file = '../../data_pybz/out5-22q4.xlsx'
-    elif args.statistics_date == '2023-03-31':
-        target_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
-        series_name_file = '../../data_pybz/out5-23q1.xlsx'
-    else:
-        raise ValueError
+    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
 
     df = pd.read_excel(args.input_file)
     reflect_df = pd.read_excel(args.reflect_file, sheet_name='资产配置表映射关系')
@@ -237,14 +228,14 @@ if __name__ == '__main__':
     second_asset_dict = {"QDII": 0, "其他": 0, "商品及衍生品": 0, "债券类": 0, "非标准化债权类资产": 0, "公募基金": 0,
                          "私募/信托/保险产品": 0, "委外投资": 0, "股权": 0, "股票": 0, "现金及银行存款": 0, "同业存单": 0, "拆放同业及买入返售": 0}
 
-    target_df = pd.read_csv(target_file, encoding="utf-8", error_bad_lines=False)
+    all_data_df = pd.read_csv(all_data_file, encoding="utf-8", error_bad_lines=False)
 
     output_column_list = ['FinProCode', 'set_name', "货币市场类", '固收', '资管产品', 'QDII', '其他', '权益类', '商品及衍生品']
     output_column_list = output_column_list + list(reflect_classify_set)
 
     # 使用inner做拼接，原因是部分产品不发季报，只对发季报的产品进行统计
-    before_penetration_df = pd.merge(target_df, before_penetration_df[output_column_list], how='inner', on='FinProCode')
-    after_penetration_df = pd.merge(target_df, after_penetration_df[output_column_list], how='inner', on='FinProCode')
+    before_penetration_df = pd.merge(all_data_df, before_penetration_df[output_column_list], how='inner', on='FinProCode')
+    after_penetration_df = pd.merge(all_data_df, after_penetration_df[output_column_list], how='inner', on='FinProCode')
     before_penetration_df.to_excel('穿透前资产投资比例统计.xlsx')
     after_penetration_df.to_excel('穿透后资产投资比例统计.xlsx')
 
