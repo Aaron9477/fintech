@@ -23,7 +23,7 @@ def get_raw_files(statistics_date):
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年四季报_230523.csv'
         series_name_file = '../../data_pybz/out5-22q4.xlsx'
     elif statistics_date == '2023-03-31':
-        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
+        all_data_file = '../data_pybz/bank_wealth_product_base_pyjy_0331.xlsx'
         raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q1_230515.csv'
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230515.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230522.csv'

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-获取私募排排一个基金的所有净值情况
+获取私募排排一个基金的所有净值情况，北京信托的需求
 """
 import pandas as pd
 import numpy as np
@@ -84,9 +84,9 @@ class Pvn_fund_info(Base):
     fund_id = Column(VARCHAR(10))
     fund_name = Column(VARCHAR(255))
     fund_short_name = Column(VARCHAR(80))
+    issuer_id = Column(VARCHAR(10))  # 发行人ID
+    trust_id = Column(VARCHAR(10))  # 基金管理公司ID
     advisor_id = Column(VARCHAR(10))  # 投资顾问id
-    lockup_period = Column(Integer) # 封闭期
-    lockup_period_unit = Column(Integer) # 封闭期
     performance_disclosure_mark = Column(Integer)  # 产品披露业绩等级
     isvalid = Column(Integer)
 
@@ -101,6 +101,18 @@ class Pvn_company_info(Base):
     company_short_name = Column(VARCHAR(80))
     register_number = Column(VARCHAR(20))  # 备案编码
     register_status = Column(Integer)  # 备案状态
+    isvalid = Column(Integer)
+
+
+class Pvn_fund_strategy(Base):
+    """
+    私募排排，公司基本信息
+    """
+    __tablename__ = 'pvn_fund_strategy'
+    fund_id = Column(VARCHAR(10), primary_key=True)
+    first_strategy = Column(Integer)
+    second_strategy = Column(Integer)
+    third_strategy = Column(Integer)
     isvalid = Column(Integer)
 
 
@@ -158,6 +170,12 @@ class GetBaseData(object):
         dt = pd.read_sql(fund_nav.statement, self.engine)
         return dt
 
+    def get_all_fund_nav_by_date(self, date):
+        # 通过ORM操作数据库
+        fund_nav = self.session.query(Pvn_nav_all_business).filter(Pvn_nav_all_business.price_date == date, Pvn_nav_all_business.isvalid == 1)
+        dt = pd.read_sql(fund_nav.statement, self.engine)
+        return dt
+
     def get_pvn_amac_company_scale_history(self):
         fund_nav = self.session.query(Pvn_amac_company_scale_history)
         dt = pd.read_sql(fund_nav.statement, self.engine).filter(Pvn_amac_company_scale_history.isvalid == 1)
@@ -174,6 +192,22 @@ class GetBaseData(object):
         dt = pd.read_sql(fund_nav.statement, self.engine)
         return dt
 
+    def get_all_fund_strategy(self):
+        fund_strategy = self.session.query(Pvn_fund_strategy).filter(Pvn_fund_strategy.isvalid == 1)
+        res = pd.read_sql(fund_strategy.statement, self.engine)
+        return res
+
+    def get_pvn_fund_info(self):
+        fund_strategy = self.session.query(Pvn_fund_info).filter(Pvn_fund_info.isvalid == 1)
+        res = pd.read_sql(fund_strategy.statement, self.engine)
+        return res
+
+    def get_all_company_info(self):
+        # 通过ORM操作数据库
+        fund_nav = self.session.query(Pvn_company_info).filter(Pvn_company_info.isvalid == 1)
+        dt = pd.read_sql(fund_nav.statement, self.engine)
+        return dt
+
 
 def get_data(fund_id):
     base_data = BaseData()
@@ -181,6 +215,65 @@ def get_data(fund_id):
 
     fund_nav = base_data_obj.get_fund_nav(fund_id)
     return fund_nav
+
+
+def get_data_tmp(begin_date, end_date, now_date):
+    base_data = BaseData()
+    base_data_obj = GetBaseData(base_data)
+
+    fund_strategy_df = base_data_obj.get_all_fund_strategy()
+    # 筛选债券型私募
+    bond_fund_strategy_df = fund_strategy_df[fund_strategy_df['first_strategy'] == 1002]
+
+    bond_name_reflect_dict = {100201: "纯债策略", 100202: "债券增强", 100203: "债券复合策略", 100204: "转债交易策略"}
+    second_strategy_list = bond_fund_strategy_df["second_strategy"]
+    second_strategy_chi_list = []
+    for second_strategy in second_strategy_list:
+        if second_strategy in bond_name_reflect_dict.keys():
+            second_strategy_chi_list.append(bond_name_reflect_dict[int(second_strategy)])
+        else:
+            second_strategy_chi_list.append('无分类数据')
+    bond_fund_strategy_df["second_strategy_new"] = second_strategy_chi_list
+
+    # 拉取基金名称
+    bond_name_df = base_data_obj.get_pvn_fund_info()
+    bond_name_df = bond_name_df[["fund_id", "fund_name", "fund_short_name", "issuer_id", "trust_id", "advisor_id"]]
+    res = bond_fund_strategy_df.merge(bond_name_df, how='left', on='fund_id')
+
+    # 拉取管理人名称
+    advisor_name_df = base_data_obj.get_all_company_info()
+    advisor_name_df = advisor_name_df[["company_id", "company_name"]]
+
+    # 对基金发行人、管理人、投顾进行名称拼接
+    res = res.merge(advisor_name_df, how='left', left_on='issuer_id', right_on="company_id")
+    res = res.rename(columns={'company_name': "issuer_name"})
+    res = res.merge(advisor_name_df, how='left', left_on='trust_id', right_on="company_id")
+    res = res.rename(columns={'company_name': "trust_name"})
+    res = res.merge(advisor_name_df, how='left', left_on='advisor_id', right_on="company_id")
+    res = res.rename(columns={'company_name': "advisor_name"})
+
+    # 拉取起始日期和结束日期的净值数据
+    begin_date_df = base_data_obj.get_all_fund_nav_by_date(begin_date)
+    end_date_df = base_data_obj.get_all_fund_nav_by_date(end_date)
+    now_date_df = base_data_obj.get_all_fund_nav_by_date(now_date)
+
+    # 只保留fund_id和复权累计净值
+    begin_date_df = begin_date_df[['fund_id', 'cumulative_nav']]
+    end_date_df = end_date_df[['fund_id', 'cumulative_nav']]
+    now_date_df = now_date_df[['fund_id', 'cumulative_nav']]
+
+    begin_date_df = begin_date_df.rename(columns={'cumulative_nav': begin_date + '复权累计净值'})
+    end_date_df = end_date_df.rename(columns={'cumulative_nav': end_date + '复权累计净值'})
+    now_date_df = now_date_df.rename(columns={'cumulative_nav': now_date + '复权累计净值'})
+
+    res = res.merge(begin_date_df, how='left', on='fund_id')
+    res = res.merge(end_date_df, how='left', on='fund_id')
+    res = res.merge(now_date_df, how='left', on='fund_id')
+
+    res['2022年收益率'] = res[end_date + '复权累计净值'] / res[begin_date + '复权累计净值'] - 1
+    res['2023年至' + now_date + '收益率'] = res[now_date + '复权累计净值'] / res[end_date + '复权累计净值'] - 1
+
+    return res
 
 
 def get_pvn_amac_company_scale_history():
@@ -211,9 +304,13 @@ if __name__ == '__main__':
 
     # 获取净值信息
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--fund_id', type=str, help='fund_id', default='HF000018RM')
+    parser.add_argument('--fund_id', type=str, help='fund_id', default='PPWMFDI')
+    parser.add_argument('--begin_date', type=str, help='begin_date', default='2021-12-31')
+    parser.add_argument('--end_date', type=str, help='end_date', default='2022-12-30')
+    parser.add_argument('--now_date', type=str, help='now_date', default='2023-05-19')
     args = parser.parse_args()
-    updata_data = get_data(args.fund_id)
+
+    updata_data = get_data_tmp(args.begin_date, args.end_date, args.now_date)
 
     # 获取规模信息
     # updata_data = get_fund_scale_range_amount()
@@ -224,7 +321,7 @@ if __name__ == '__main__':
     #                   "HF00006QZT", "HF00003ZU0", "HF000063FW", "HF00005FAB",]
 
     print(updata_data)
-    updata_data.to_excel('国泰君安君享同利集合.xlsx')
+    updata_data.to_excel('数据提取结果.xlsx')
 
 
 
