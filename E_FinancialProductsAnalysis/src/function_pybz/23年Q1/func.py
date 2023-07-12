@@ -17,6 +17,8 @@ def choose_report_asset_table(input, statistics_date):
             tags = ['季度投资管理报告']
         elif statistics_date == "2022-06-30":
             tags = ['半年度投资管理报告', '2022二季报', '季度投资管理报告']
+        elif statistics_date == "2023-03-31":
+            tags = ['2023一季报', '季度投资管理报告']
         else:
             raise ValueError("statistics_date 错误")
 
@@ -54,6 +56,8 @@ def choose_report_detail_table(input, statistics_date):
             tags = ['2022一季报']
         elif statistics_date == "2021-12-31":
             tags = ['2021年报', '2021四季报']
+        elif statistics_date == "2023-03-31":
+            tags = ['2023一季报']
         else:
             raise ValueError("statistics_date 错误")
 
@@ -70,7 +74,9 @@ def choose_report_detail_table(input, statistics_date):
     RegistrationCode_mainind = []
     for FinProCode in FinProCodes[:]:
         data_set_FinProCode = input_df[input_df['FinProCode'] == FinProCode]
-        RegistrationCode_mainind += list(get_report_index(data_set_FinProCode, statistics_date))
+        tmp_res = get_report_index(data_set_FinProCode, statistics_date)
+        if tmp_res is not None:
+            RegistrationCode_mainind += list(tmp_res)
     input_df = input_df[input_df.index.isin(RegistrationCode_mainind)]
 
     return input_df

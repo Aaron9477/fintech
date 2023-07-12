@@ -8,7 +8,9 @@ import pandas as pd
 import numpy as np
 import argparse
 import datetime
-from func import choose_report_detail_table
+
+from func import get_trading_day, get_product_exist
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files, get_raw_files_jy
 
 #显示所有的列
 pd.set_option('display.max_columns', None)
@@ -31,6 +33,9 @@ def df_preprocess(input_df, all_data_df, statistics_date):
 
     output_df = input_df.copy()
 
+    # 筛选存续期产品
+    all_data_df = get_product_exist(all_data_df, statistics_date)
+
     # 筛选子产品 all_data_df
     RegistrationCodes = list(set(all_data_df['RegistrationCode'].dropna()))
     RegistrationCode_mainind = []
@@ -42,13 +47,10 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     output_df = output_df.merge(all_data_df, how='inner', on='FinProCode')
 
     # 筛选公募基金
-    output_df = output_df[(output_df['primary_type_chi'] == '基金') & (output_df['secondary_type_chi'] == '公募基金')]
+    output_df = output_df[(output_df['InvestObject'] == 'FCC0000001WK')]
 
     # 合并基金代码，筛选代码非空的基金
     output_df = output_df[(output_df['SecuCode'].notnull())]
-
-    # 筛选存续期产品
-    output_df = output_df[(output_df['MaturityDate'] > statistics_date) & (output_df['product_establish_date'] < statistics_date)]
 
     return output_df
 
@@ -71,29 +73,52 @@ def split_list_average_n(origin_list, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='input_file', default='基金风格稳定度标签.xlsx')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
 
-    df = pd.read_excel(args.input_file)
+    statistics_date = args.statistics_date
 
-    fund_list = df['证券代码'].values
-    fund_str = ','.join(fund_list)
+    jy_raw_files = get_raw_files_jy(statistics_date)
+    all_data_file = jy_raw_files[0]
+    jy_top10_file = jy_raw_files[2]
+
+    all_data_df = pd.read_csv(all_data_file)
+    top10_df = pd.read_csv(jy_top10_file)
+
+    trading_day = get_trading_day(statistics_date)
+
+    all_data_df = all_data_df[['FinProCode', 'MaturityDate', 'product_establish_date', 'RegistrationCode', 'ProductType']]
+
+    # 前处理
+    top10_df = df_preprocess(top10_df, all_data_df, statistics_date)
+
+    fund_list = code_preprocess(top10_df['SecuCode'].values)
+    fund_set = set(fund_list)
+    fund_str = ','.join(fund_set)
 
     w.start()
     index = 0
-
-    statistics_date_list = ['2022-12-30', '2021-12-31', '2020-12-31', '2019-12-31', '2018-12-28', '2017-12-29', '2016-12-30', '2015-12-31']
-
-    for statistics_date in statistics_date_list:
-        wind_return = w.wsd(fund_str, "NAV_adj", statistics_date, statistics_date, "PriceAdj=F")
+    for feat in target_feature:
+        wind_return = w.wsd(fund_str, feat, trading_day, trading_day, "annualized=0;PriceAdj=F")
         fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
         value_list = [fund_value_dict[x] for x in fund_list]
-        df[statistics_date] = value_list
+        top10_df[feature_name[index]] = value_list
+        index += 1
 
-    for i in range(len(statistics_date_list) - 3):
-        df[statistics_date_list[i+3] + '至' + statistics_date_list[i] + '收益率'] = df[statistics_date_list[i]] / df[statistics_date_list[i+3]] - 1
+    trading_day_before_1y = str(int(trading_day[:4])-1) + trading_day[4:]
+    wind_return = w.wsd(fund_str, "NAV_adj", trading_day_before_1y, trading_day_before_1y, "PriceAdj=F")
+    fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
+    value_list = [fund_value_dict[x] for x in fund_list]
+    top10_df['统计日一年前净值'] = value_list
 
-    df.to_excel("羽洁姐文件收益统计.xlsx")
+    wind_return = w.wsd(fund_str, "NAV_adj", trading_day, trading_day, "PriceAdj=F")
+    fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
+    value_list = [fund_value_dict[x] for x in fund_list]
+    top10_df['统计日净值'] = value_list
+
+    top10_df['一年收益率'] = top10_df['统计日净值'] / top10_df['统计日一年前净值'] - 1
+
+    top10_df.to_excel("jy_基金信息_" + statistics_date + ".xlsx")
 
 
 

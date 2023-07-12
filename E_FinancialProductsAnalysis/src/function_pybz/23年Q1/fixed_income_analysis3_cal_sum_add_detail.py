@@ -211,12 +211,14 @@ if __name__ == '__main__':
     parser.add_argument('--asset_allocation_file', type=str, help='asset_allocation_file', default='金融产品资产配置表映射后.xlsx')
     parser.add_argument('--top10_fix_income_enhance_analysis_file', type=str, help='top10_fix_income_enhance_analysis_file', default='前十大持仓固收增强分析.xlsx')
     parser.add_argument('--fund_whether_has_equity_file', type=str, help='fund_whether_has_equity_file', default='资产明细是否有含权基金_基于基金持仓.xlsx')
+    parser.add_argument('--jy_fixed_income_result_file', type=str, help='jy_fixed_income_result_file', default='jy_固收增强分类结果.xlsx')
     parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
     args = parser.parse_args()
 
     asset_allocation_file = args.asset_allocation_file
     top10_fix_income_enhance_analysis_file = args.top10_fix_income_enhance_analysis_file
     fund_whether_has_equity_file = args.fund_whether_has_equity_file
+    jy_fixed_income_result_file = args.jy_fixed_income_result_file
     statistics_date = args.statistics_date
 
     all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
@@ -226,6 +228,7 @@ if __name__ == '__main__':
     series_name_df = pd.read_excel(series_name_file)
     top10_fix_income_enhance_analysis_df = pd.read_excel(top10_fix_income_enhance_analysis_file)
     fund_whether_has_equity_df = pd.read_excel(fund_whether_has_equity_file)
+    jy_fixed_income_result_df = pd.read_excel(jy_fixed_income_result_file)
 
     # 计算理财产品资产配置表投资产的比例
     asset_allocation_ratio_df = get_asset_allocation_ratio(asset_allocation_df)
@@ -243,6 +246,15 @@ if __name__ == '__main__':
     series_name_df['set'] = series_name_df['set'].str.split('-').str.get(0)
     all_data_df = pd.merge(all_data_df, series_name_df[['FinProCode', 'set']], how='left', on='FinProCode')
 
+    # 判断固收增强的类型
     output_df = judge_enhance_type(all_data_df)
+
+    jy_fixed_income_result_df.rename(columns={'enhance_type_asset': 'jy_enhance_type_asset'}, inplace=True)
+    jy_fixed_income_result_df = jy_fixed_income_result_df[['RegistrationCode', 'jy_enhance_type_asset']]
+    jy_fixed_income_result_df.drop_duplicates(subset=None, keep='first', inplace=True, ignore_index=False)
+    output_df = output_df.merge(jy_fixed_income_result_df, on='RegistrationCode')
+    output_df['final_enhance_type_asset'] = np.where(output_df['enhance_type_asset'] == '底层数据未披露',
+                                             output_df['jy_enhance_type_asset'], output_df['enhance_type_asset'])
+
     tmp_output_df = output_df[(output_df['InvestmentType'] == '固定收益类') & (output_df['inv_type'] == 0)]
-    tmp_output_df.to_excel('固收增强分类结果.xlsx')
+    tmp_output_df.to_excel('固收增强分类结果_final.xlsx')
