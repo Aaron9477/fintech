@@ -34,19 +34,6 @@ def compare_first_asset_sum_with_total(input_df, proportion_dict, use_data_col_n
             print(proportion_dict)
 
 
-# def compare_second_asset_sum_with_total(input_df, first_asset_proportion_dict, second_asset_proportion_dict, use_data_col_name):
-#     test_dict = second_asset_proportion_dict.copy()
-#     supplement_type_list = ['混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']
-#     for type in supplement_type_list:
-#         test_dict[type] = first_asset_proportion_dict[type]
-#     if len(input_df[(input_df['primary_type_chi'] == '合计')]) > 0:
-#         total = input_df[(input_df['primary_type_chi'] == '合计')][use_data_col_name].iloc[0]
-#         if abs(sum(test_dict.values()) - total) > 0.01:
-#             print(input_df['FinProCode'].iloc[0])
-#             print(test_dict)
-#             print('总和:{}'.format(sum(test_dict.values())))
-
-
 def proportion_normalization(proportion_dict):
     proportion_sum = sum(proportion_dict.values())
     for key in proportion_dict.keys():
@@ -78,27 +65,6 @@ def cal_second_asset_proportion(input_df, col_name, reflect_classify_set):
         second_asset_dict[reflect_classify] = input_df[(input_df['大类资产'] == first_asset) & (input_df['详细大类资产'] == second_asset)][col_name].sum()
 
     return second_asset_dict
-
-
-def judge_enhance_type(proportion_dict, product_name):
-    # 判断是否是根据FOF进行增强
-    if 'FOF' in product_name or 'fof' in product_name:
-        return 'FOF增强'
-
-    # 判断纯固收
-    if proportion_dict['固收'] > 0.95:
-        return '纯固收'
-
-    tmp_dict = proportion_dict.copy()
-    # 移除固定收益类、资管类、其他类
-    del tmp_dict['固收'], tmp_dict['资管产品'], tmp_dict['其他']
-
-    asset_weight_list = sorted(tmp_dict.items(), key=lambda x: x[1], reverse=True)
-    # 占比最大且超过5%的作为增强类型
-    if asset_weight_list[0][1] >= 0.05:
-        return asset_weight_list[0][0]
-    else:
-        return 'None'
 
 
 def cal_asset_ratio_by_filed(input_df, used_filed, output_dict, reflect_classify_set):
@@ -156,21 +122,6 @@ def cal_asset_ratio(input_df, reflect_classify_set):
         cal_asset_ratio_by_filed(input_df, use_data_col_name, after_penetration_dict, reflect_classify_set)
 
     return before_penetration_dict, after_penetration_dict
-
-
-def add_final_enhancement_type(input_df):
-    enhance_type_asset_list = input_df['enhance_type_asset']
-    enhance_type_top10_list = input_df['enhance_type_top10']
-    final_enhancement_list = []
-
-    # 优先判断前十大的增强方式，再判断大类资产的增强方式（因为前十大是穿透后的）
-    for i in range(len(enhance_type_asset_list)):
-        if enhance_type_top10_list[i] in ['纯固收', '权益类', '商品及衍生品', '非标资产', 'QDII']:
-            final_enhancement_list.append(enhance_type_top10_list[i])
-        else:
-            final_enhancement_list.append(enhance_type_asset_list[i])
-    input_df['enhance_type'] = final_enhancement_list
-    return input_df
 
 
 # 获取资产一二级类目的映射关系

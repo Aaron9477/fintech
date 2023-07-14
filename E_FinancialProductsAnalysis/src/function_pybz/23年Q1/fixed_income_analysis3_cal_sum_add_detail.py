@@ -47,19 +47,6 @@ def compare_first_asset_sum_with_total(input_df, proportion_dict, use_data_col_n
             print(proportion_dict)
 
 
-# def compare_second_asset_sum_with_total(input_df, first_asset_proportion_dict, second_asset_proportion_dict, use_data_col_name):
-#     test_dict = second_asset_proportion_dict.copy()
-#     supplement_type_list = ['混合类', 'QDII', '其他', '权益类', '商品及衍生品', '非标资产']
-#     for type in supplement_type_list:
-#         test_dict[type] = first_asset_proportion_dict[type]
-#     if len(input_df[(input_df['大类资产'] == '合计')]) > 0:
-#         total = input_df[(input_df['大类资产'] == '合计')][use_data_col_name].iloc[0]
-#         if abs(sum(test_dict.values()) - total) > 0.01:
-#             print(input_df['FinProCode'].iloc[0])
-#             print(test_dict)
-#             print('总和:{}'.format(sum(test_dict.values())))
-
-
 def proportion_normalization(proportion_dict):
     proportion_sum = sum(proportion_dict.values())
     for key in proportion_dict.keys():
@@ -170,21 +157,6 @@ def cal_asset_allocation_ratio(input_df):
     output_dict.update(first_asset_proportion_norm_dict)
     output_dict.update(public_fund_proportion_dict)
     return output_dict
-
-
-def add_final_enhancement_type(input_df):
-    enhance_type_asset_list = input_df['enhance_type_asset']
-    enhance_type_top10_list = input_df['enhance_type_top10']
-    final_enhancement_list = []
-
-    # 优先判断前十大的增强方式，再判断大类资产的增强方式（因为前十大是穿透后的）
-    for i in range(len(enhance_type_asset_list)):
-        if enhance_type_top10_list[i] in ['纯固收', '权益类', '商品及衍生品', '非标资产', 'QDII']:
-            final_enhancement_list.append(enhance_type_top10_list[i])
-        else:
-            final_enhancement_list.append(enhance_type_asset_list[i])
-    input_df['enhance_type'] = final_enhancement_list
-    return input_df
 
 
 def get_asset_allocation_ratio(input):

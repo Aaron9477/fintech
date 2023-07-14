@@ -20,43 +20,6 @@ pd.set_option('display.max_rows', None)
 pd.set_option('max_colwidth',100)
 
 
-def code_preprocess(input_list):
-    res_list = []
-    for x in input_list:
-        x = str(x)
-        if len(x) > 6:
-            x = x[:6]
-        x = x.split('.')[0].split(' ')[0]
-        res_list.append(x + '.OF')
-    return res_list
-
-
-def bond_grade_statistics(input):
-    df_input = input.copy()
-
-    bond_grade_list = list(df_input["债券评级"])
-    bond_grade_classify = []
-    for i in range(len(bond_grade_list)):
-        # 部分国债和证金债没有编码或者在万德上查不到
-        if bond_grade_list[i] == 'AAA' or bond_grade_list[i] == 'A-1':
-            bond_grade_classify.append("AAA")
-        elif pd.isna(bond_grade_list[i]):
-            bond_grade_classify.append("未披露")
-        else:
-            bond_grade_classify.append("低于AAA")
-    df_input["债券评级"] = bond_grade_classify
-
-    # 统计债券评级情况
-    grouped = df_input.groupby(['AgentName', '债券评级']).agg({'MarketValue': sum})
-    MarketValue_list = list(grouped['MarketValue'].items())
-    res_list = []
-    for i in range(len(MarketValue_list)):
-        res_list.append([MarketValue_list[i][0][0], MarketValue_list[i][0][1], MarketValue_list[i][1]])
-    col_name = ['理财子公司', '债券评级', '债券评级资产规模']
-    df_res = pd.DataFrame(data=res_list, columns=col_name)
-    return df_res
-
-
 def bond_type_statistics(input):
 
     df_input = input.copy()

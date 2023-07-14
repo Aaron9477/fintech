@@ -122,24 +122,6 @@ def cal_outsourcing_ratio(input_df):
     return output_dict
 
 
-# 设定截止日期
-end_date = '2022-06-30 00:00:00'
-def get_not_before_enddate(x):
-    if (str(x) in ['NaT','nan']):
-        return True
-    if x < end_date:
-        return False
-    return True
-
-
-def get_before_enddate(x):
-    if (str(x) in ['NaT','nan']):
-        return False
-    if x <= end_date:
-        return True
-    return False
-
-
 def preprocess(input_df, statistics_date):
     # 筛选存续期产品
     input_df = get_product_exist(input_df, statistics_date)
@@ -190,14 +172,6 @@ def define_product_asset_dict(asset_list, investment_type_list):
         product_asset_ratio_dict[investment_type] = copy.deepcopy(asset_ratio_dict)
 
     return product_asset_scale_dict, product_asset_ratio_dict
-
-
-def set_zero_asset_management_after_penetration(row):
-    if row['穿透类型'] == '穿透后' and row['资产大类'] == '资管产品' and row['资产细类'] != '公募基金':
-        # 输出有问题的数据
-        print(row)
-        row['资产规模'], row['资产占比'], row['有披露的公司资产规模均值'], row['有披露的公司资产占比均值'] = 0, np.nan, np.nan, np.nan
-    return row
 
 
 if __name__ == '__main__':
