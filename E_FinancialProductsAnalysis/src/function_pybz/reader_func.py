@@ -38,6 +38,12 @@ def get_raw_files(statistics_date):
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q1_230620.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q1_230620.csv'
         series_name_file = '../../data_pybz/out5-23q1.xlsx'
+    elif statistics_date == '2023-06-30':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0630.csv'
+        raw_asset_file = '../../data_pybz/pybz_23Q2资产配置数据-普益.csv'
+        top10_file = '../../data_pybz/pybz_23Q2前十大数据-普益.csv'
+        non_standard_file = '../../data_pybz/pybz_23Q2非标资产数据-普益.csv'
+        series_name_file = '../../data_pybz/out5-23q1.xlsx'
     else:
         raise ValueError
 

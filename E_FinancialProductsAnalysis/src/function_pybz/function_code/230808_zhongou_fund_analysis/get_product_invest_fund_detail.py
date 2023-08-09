@@ -67,8 +67,10 @@ def df_preprocess(input_df, statistics_date):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-09-30')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
+    # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-12-31')
     # parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-06-30')
+
     parser.add_argument('--score_file', type=str, help='score_file', default='全部基金量化打分排名.xlsx')
     parser.add_argument('--output_file', type=str, help='output_file', default='理财产品重仓基金明细表.xlsx')
     args = parser.parse_args()
@@ -86,6 +88,9 @@ if __name__ == '__main__':
     elif args.statistics_date == '2023-03-31':
         input_file = '../../23年Q1/基金信息_2023-03-31.xlsx'
         all_data_file = '../../../data_pybz/bank_wealth_product_base_pyjy_0331.csv'
+    elif args.statistics_date == '2023-06-30':
+        input_file = '../../23年Q2/基金信息_2023-06-30.xlsx'
+        all_data_file = '../../../data_pybz/bank_wealth_product_base_pyjy_0630.csv'
     else:
         raise ValueError
 

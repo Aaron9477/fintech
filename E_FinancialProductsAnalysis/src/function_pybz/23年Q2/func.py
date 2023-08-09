@@ -149,15 +149,15 @@ def bond_analysis_df_preprocess(input_df):
 
 
 def get_trading_day(statistics_date):
-    if statistics_date == '2022-06-30':
-        trading_day = '2022-06-30'
-    elif statistics_date == '2022-09-30':
+    if statistics_date == '2022-09-30':
         trading_day = '2022-09-30'
     elif statistics_date == '2022-12-31':
         # 2022-12-31 不是交易日，所以使用2022-12-30去wind拉取数据
         trading_day = '2022-12-30'
     elif statistics_date == '2023-03-31':
         trading_day = '2023-03-31'
+    elif statistics_date == '2023-06-30':
+        trading_day = '2023-06-30'
     else:
         raise ValueError
     return trading_day

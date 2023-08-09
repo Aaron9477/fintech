@@ -73,7 +73,7 @@ def split_list_average_n(origin_list, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2022-06-30')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     df['一年收益率'] = df['统计日净值'] / df['统计日一年前净值'] - 1
 
-    # df.to_excel("基金信息_" + statistics_date + ".xlsx")
+    df.to_excel("基金信息_" + statistics_date + ".xlsx")
 
 
 

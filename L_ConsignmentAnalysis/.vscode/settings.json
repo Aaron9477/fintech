@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./result_process_codes",
+        ",/data_process_codes"
+    ],
+    "python.analysis.typeCheckingMode": "off"
+}

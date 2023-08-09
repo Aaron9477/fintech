@@ -1,0 +1,15 @@
+D:\Project\InternalTools\K_C#test\Demo1\bin\Debug\net7.0\Demo1.exe
+D:\Project\InternalTools\K_C#test\Demo1\bin\Debug\net7.0\Demo1.deps.json
+D:\Project\InternalTools\K_C#test\Demo1\bin\Debug\net7.0\Demo1.runtimeconfig.json
+D:\Project\InternalTools\K_C#test\Demo1\bin\Debug\net7.0\Demo1.dll
+D:\Project\InternalTools\K_C#test\Demo1\bin\Debug\net7.0\Demo1.pdb
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.csproj.AssemblyReference.cache
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.GeneratedMSBuildEditorConfig.editorconfig
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.AssemblyInfoInputs.cache
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.AssemblyInfo.cs
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.csproj.CoreCompileInputs.cache
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.dll
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\refint\Demo1.dll
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.pdb
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\Demo1.genruntimeconfig.cache
+D:\Project\InternalTools\K_C#test\Demo1\obj\Debug\net7.0\ref\Demo1.dll
