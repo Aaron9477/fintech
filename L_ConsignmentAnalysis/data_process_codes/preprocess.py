@@ -34,7 +34,7 @@ def preprocess(input, statistics_date,if_filter_exsist=True):
 #         RegistrationCode_mainind.append(get_main_product_ind(data_set_RegistrationCode))
 #     output_df = input_df[input_df.index.isin(RegistrationCode_mainind)]
 
-    #修改版本，加速了一点
+    # 修改版本，加速了一点
     def temp_func(x):
         if(x['ProductType']=='母产品'): return 1
         elif(x['ProductType']=='产品'): return 2
@@ -55,7 +55,7 @@ def get_product_exist(input, statistics_date):
                         & (input_df['product_establish_date'] <= statistics_date)]
     return input_df
 
-#剔除母子关系的数据
+# 剔除母子关系的数据
 def exclude_mother_child_relation(input_df):
     return input_df[~(input_df['ParentCompName']==input_df['代销机构'])]
 

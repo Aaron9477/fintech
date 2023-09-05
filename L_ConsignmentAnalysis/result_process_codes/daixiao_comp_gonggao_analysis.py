@@ -127,24 +127,23 @@ def daixiao_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
             df3_temp = sectorize(df3_temp,type = result_type)
             df3_temp = df3_temp.drop_duplicates(subset=['代销机构','FinProCode'])
         #计算低于基准产品比例
-        group_=df3_temp.groupby(['代销机构','InvestmentType'])[['BenchmarkMin']].mean()
-        group_.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
+        group_=df3_temp.groupby(['代销机构','InvestmentType'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].dropna().mean()).rename('BenchMin_ave').to_frame()
+        # group_.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
         group_.replace(0,np.NaN,inplace=True)
         df3_temp=pd.merge(df3_temp,group_,left_on=['代销机构','InvestmentType'],right_index=True)
         #使用组内均值填充BenchmarkMin和AssetValue缺失值
-        底层数据_公告分析_代销机构=df3_temp.groupby(['代销机构','InvestmentType'])[['BenchmarkMin']].mean()
-        底层数据_公告分析_代销机构.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
-        df3_temp['low_ret'] = df3_temp['interval_ret_annual'] < df3_temp['BenchMin_ave']
-        底层数据_公告分析_代销机构['count']=df3_temp.groupby(['代销机构','InvestmentType'])['low_ret'].count()
-        底层数据_公告分析_代销机构['count_low']=df3_temp.groupby(['代销机构','InvestmentType'])['low_ret'].sum()
-        底层数据_公告分析_代销机构['低于基准比例']=底层数据_公告分析_代销机构['count_low']/底层数据_公告分析_代销机构['count']
-        def low_rate(x):
-            #print(x)
-            if np.isnan(x[0]):
+        底层数据_公告分析_代销机构=df3_temp.groupby(['代销机构','InvestmentType'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].dropna().mean()).rename('BenchMin_ave').to_frame()
+        #计算低于基准产品比例
+        def low_bench_ratio(x):
+            try:
+                x = x.drop_duplicates(subset='RegistrationCode')
+                x = x.dropna(subset=['BenchmarkMin','interval_ret_annual'])
+                num = len(x)
+                lower = len(x[x['interval_ret_annual']<x['BenchmarkMin']])
+                return lower / num
+            except:
                 return np.NaN
-            else:
-                return x[1]
-        底层数据_公告分析_代销机构['低于基准比例']=底层数据_公告分析_代销机构[['BenchMin_ave','低于基准比例']].apply(low_rate,axis=1)
+        底层数据_公告分析_代销机构['低于基准比例']=df3_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin','interval_ret_annual','RegistrationCode']].apply(low_bench_ratio)
         #复制index
         底层数据_公告分析_代销机构['type_']=底层数据_公告分析_代销机构.index.get_level_values('InvestmentType')
         底层数据_公告分析_代销机构['代销机构']=底层数据_公告分析_代销机构.index.get_level_values('代销机构')
@@ -155,14 +154,13 @@ def daixiao_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
                 底层数据_公告分析_代销机构.loc[i,'rank']=底层数据_公告分析_代销机构.loc[底层数据_公告分析_代销机构['type_']==j]['BenchMin_ave'].rank(method='min',ascending=False)[i]
                 底层数据_公告分析_代销机构.loc[i,'rank_sum']=底层数据_公告分析_代销机构.loc[底层数据_公告分析_代销机构['type_']==j]['BenchMin_ave'].count()
         #计算市场平均基准比例
-        底层数据_公告分析_代销机构=pd.merge(底层数据_公告分析_代销机构,df3_temp.groupby(['InvestmentType'])['BenchmarkMin'].mean(),left_on='type_',right_index=True)
+        底层数据_公告分析_代销机构=pd.merge(底层数据_公告分析_代销机构,df3_temp.groupby(['InvestmentType'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].dropna().mean()).rename('BenchmarkMin').to_frame(),left_on='type_',right_index=True)
         #计算加权风险等级
         df3_temp['risk_score']=pd.to_numeric(df3_temp['risk_score'])
         底层数据_公告分析_代销机构['weight_risk']=df3_temp.groupby(['代销机构','InvestmentType']).apply(lambda x: np_average(x['risk_score'], weights=x['AssetValue']))
         #计算市场平均风险等级
         risk_market=pd.DataFrame(df3_temp.groupby(['InvestmentType']).apply(lambda x: np_average(x['risk_score'], weights=x['AssetValue'])),columns=['risk_score_ave'])
         底层数据_公告分析_代销机构=pd.merge(底层数据_公告分析_代销机构,risk_market,on='InvestmentType')
-        底层数据_公告分析_代销机构=底层数据_公告分析_代销机构.drop(['count','count_low'], axis=1)
         if m=='是':
             底层数据_公告分析_代销机构['是否剔除母子关系']='是'
             底层数据_公告分析_代销机构_是=底层数据_公告分析_代销机构.copy()
@@ -176,4 +174,5 @@ def daixiao_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
     底层数据_公告分析_代销机构.replace('固定收益类','固定收益类（非现金）', inplace = True)
     底层数据_公告分析_代销机构.replace('商品及金融衍生品类','商品及衍生品类', inplace = True)
     底层数据_公告分析_代销机构.set_index('代销机构',inplace=True)
+    底层数据_公告分析_代销机构.loc[:,['BenchMin_ave','低于基准比例','rank']] = 底层数据_公告分析_代销机构.loc[:,['BenchMin_ave','低于基准比例','rank']].fillna('-')
     return 底层数据_公告分析_代销机构

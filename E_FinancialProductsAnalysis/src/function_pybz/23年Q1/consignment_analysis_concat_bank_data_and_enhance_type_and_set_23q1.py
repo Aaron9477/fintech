@@ -40,54 +40,33 @@ def get_final_equity(row):
 
 
 def get_raw_fix_enhance_data(target_df):
-    fix_enhance_22q3 = '22年Q3/固收增强分类结果.xlsx'
-    fix_enhance_22q4 = '22年Q4/固收增强分类结果.xlsx'
-    fix_enhance_23q1 = '23年Q1/固收增强分类结果.xlsx'
+    fix_enhance_23q1 = '代销分析使用的固收+分类.xlsx'
 
-    fix_enhance_22q3_df = pd.read_excel(fix_enhance_22q3)[['FinProCode', 'enhance_type_asset']]
-    fix_enhance_22q4_df = pd.read_excel(fix_enhance_22q4)[['FinProCode', 'enhance_type_asset']]
     fix_enhance_23q1_df = pd.read_excel(fix_enhance_23q1)[['FinProCode', 'enhance_type_asset']]
+    fix_enhance_23q1_df = fixed_income_type_reflect(fix_enhance_23q1_df)
 
-    fix_enhance_22q3_df.rename(columns={'enhance_type_asset': 'enhance_type_asset_22q3'}, inplace=True)
-    fix_enhance_22q4_df.rename(columns={'enhance_type_asset': 'enhance_type_asset_22q4'}, inplace=True)
-    fix_enhance_23q1_df.rename(columns={'enhance_type_asset': 'enhance_type_asset_23q1'}, inplace=True)
+    fix_enhance_23q1_df.rename(columns={'enhance_type': '固收增强分类'}, inplace=True)
 
-    target_df = target_df.merge(fix_enhance_22q3_df, on='FinProCode', how='left')
-    target_df = target_df.merge(fix_enhance_22q4_df, on='FinProCode', how='left')
     target_df = target_df.merge(fix_enhance_23q1_df, on='FinProCode', how='left')
 
     return target_df
 
 
-def get_raw_equity_data(target_df):
-    equity_22q3 = '22年Q3/穿透后资产投资比例统计.xlsx'
-    equity_22q4 = '22年Q4/穿透后资产投资比例统计.xlsx'
-    equity_23q1 = '23年Q1/穿透后资产投资比例统计.xlsx'
-
-    equity_22q3_df = pd.read_excel(equity_22q3)[['FinProCode', '权益类']]
-    equity_22q4_df = pd.read_excel(equity_22q4)[['FinProCode', '权益类']]
-    equity_23q1_df = pd.read_excel(equity_23q1)[['FinProCode', '权益类']]
-
-    equity_22q3_df.rename(columns={'权益类': 'equity_22q3'}, inplace=True)
-    equity_22q4_df.rename(columns={'权益类': 'equity_22q4'}, inplace=True)
-    equity_23q1_df.rename(columns={'权益类': 'equity_23q1'}, inplace=True)
-
-    target_df = target_df.merge(equity_22q3_df, on='FinProCode', how='left')
-    target_df = target_df.merge(equity_22q4_df, on='FinProCode', how='left')
-    target_df = target_df.merge(equity_23q1_df, on='FinProCode', how='left')
+def get_set_data(target_df):
+    set_file = '../../data_pybz/out5-23q1.xlsx'
+    set_df = pd.read_excel(set_file)[['FinProCode', 'set']]
+    set_df.rename(columns={'set': '系列名称'}, inplace=True)
+    target_df = target_df.merge(set_df, on='FinProCode', how='left')
 
     return target_df
 
 
 def enhance_type_asset_supply_son_by_parent(target_df):
     RegistrationCode_list = list(target_df['RegistrationCode'])
-    final_list = list(target_df['enhance_type_asset_final'])
+    final_list = list(target_df['固收增强分类'])
     RegistrationCode_dict = dict()
     for i in range(len(RegistrationCode_list)):
-        # 优先读取识别为 非"底层数据未披露"的产品
         if isinstance(final_list[i], str):
-            if RegistrationCode_list[i] in RegistrationCode_dict.keys() and RegistrationCode_dict[RegistrationCode_list[i]] != '底层数据未披露':
-                continue
             RegistrationCode_dict[RegistrationCode_list[i]] = final_list[i]
 
     supply_list = []
@@ -97,16 +76,17 @@ def enhance_type_asset_supply_son_by_parent(target_df):
         else:
             supply_list.append(np.nan)
 
-    target_df['enhance_type_asset_supply_son_by_parent'] = supply_list
+    target_df['固收增强分类_补充子产品'] = supply_list
     return target_df
 
 
 def equity_supply_son_by_parent(target_df):
     RegistrationCode_list = list(target_df['RegistrationCode'])
-    final_list = list(target_df['equity_final'])
+    final_list = list(target_df['系列名称'])
+
     RegistrationCode_dict = dict()
     for i in range(len(RegistrationCode_list)):
-        if not np.isnan(final_list[i]):
+        if isinstance(final_list[i], str):
             RegistrationCode_dict[RegistrationCode_list[i]] = final_list[i]
 
     supply_list = []
@@ -116,24 +96,35 @@ def equity_supply_son_by_parent(target_df):
         else:
             supply_list.append(np.nan)
 
-    target_df['equity_supply_son_by_parent'] = supply_list
+    target_df['系列名称_补充子产品'] = supply_list
     return target_df
 
 
-def enhance_type_asset_supply_source(row):
-    if isinstance(row['enhance_type_asset_supply_son_by_parent'], str) and row['enhance_type_asset_supply_son_by_parent'] != '底层数据未披露':
-        return "事后"
-    else:
-        return row['resource']
+# 对固收增强进行归类
+def fixed_income_type_reflect(input):
+    input_df = input.copy()
+    # 对具体的固收增强产品做映射
+    # 注：固收+(其他)映射为固收增强（未披露）；固收+(其他)为投资了“其他”类资产的产品
+    asset_name_reflect_dict = {'纯债': '固收（纯债）',
+                               '固收+(权益)': '固收增强（权益）',
+                               '固收+(含权基金)': '固收增强（权益）', '固收+(含权基金,非标)': '固收增强（权益）',
+                               '固收+(基金)': '固收增强（基金）',
+                               '固收+(非标)': '固收增强（非标）',
 
+                               '固收+(权益,非标)': '固收增强（多资产）', '固收+(权益,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,非标)': '固收增强（多资产）',
+                               '固收+(衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,衍生品)': '固收增强（多资产）', '固收+(QDII,衍生品)': '固收增强（多资产）',
+                               '固收+(QDII,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,权益,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,非标)': '固收增强（多资产）',
+                               '固收+(QDII,含权基金,非标)': '固收增强（多资产）', '固收+(QDII,含权基金,衍生品,非标)': '固收增强（多资产）',
+                               '固收+(含权基金,衍生品,非标)': '固收增强（多资产）', '固收+(QDII,含权基金,衍生品)': '固收增强（多资产）',
 
-def enhance_type_asset_supply_son_by_puyi(row):
-    if isinstance(row['enhance_type_asset_supply_son_by_parent'], str) and row['enhance_type_asset_supply_son_by_parent'] != '底层数据未披露':
-        return row['enhance_type_asset_supply_son_by_parent']
-    elif row['product_type_son'] == '纯固收':
-        return '纯债'
-    else:
-        return row['product_type_son']
+                               '固收+(衍生品)': '固收增强（衍生品）', '固收+(权益,衍生品)': '固收增强（衍生品）', '固收+(含权基金,衍生品)': '固收增强（衍生品）',
+
+                               '固收+(QDII)': '固收增强（QDII）', '固收+(QDII,权益)': '固收增强（QDII）', '固收+(QDII,含权基金)': '固收增强（QDII）',
+                               '固收+(其他)': '固收增强（未披露）', '底层数据未披露': '固收增强（未披露）'}
+    enhance_type = input_df['enhance_type_asset']
+    enhance_type_reflect = [asset_name_reflect_dict[x] for x in enhance_type]
+    input_df['enhance_type'] = enhance_type_reflect
+    return input_df
 
 
 if __name__ == '__main__':
@@ -147,16 +138,10 @@ if __name__ == '__main__':
 
     target_df = pd.read_csv(all_data_file)
     target_df = get_raw_fix_enhance_data(target_df)
-    target_df = get_raw_equity_data(target_df)
-
-    target_df['enhance_type_asset_final'] = target_df.apply(lambda x: get_final_enhance_type(x), axis=1)
-    target_df['equity_final'] = target_df.apply(lambda x: get_final_equity(x), axis=1)
+    target_df = get_set_data(target_df)
 
     # 对子产品的固收增强类型和权益持仓，使用母产品的进行补充
     target_df = enhance_type_asset_supply_son_by_parent(target_df)
     target_df = equity_supply_son_by_parent(target_df)
 
-    # 设定数据来源，如果是自分类是事后，如果用普益的，采用普益的resource
-    target_df['resource_new'] = target_df.apply(lambda x: enhance_type_asset_supply_source(x), axis=1)
-    target_df['enhance_type_asset_supply_son_by_parent'] = target_df.apply(lambda x: enhance_type_asset_supply_son_by_puyi(x), axis=1)
-    target_df.to_excel('bank表增加固收加分类和权益持仓.xlsx')
+    target_df.to_excel('基础数据.xlsx')

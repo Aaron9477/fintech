@@ -24,6 +24,9 @@ pd.set_option('max_colwidth', 100)
 
 sheet_list = ['股票多头-多空', '指数增强', '市场中性', '管理期货', '宏观', '套利', '债券', '混合']
 
+# 周报起始位置
+date_start_index = 8
+
 def is_number(s):
     try:
         float(s)
@@ -92,9 +95,9 @@ def write_fund_base_info(conn, cursor, fund_info_content_list):
             if index == 'Unnamed: 0':
                 continue
             # 基金有名称，且存在管理人和成立时间（用于过滤非基金基本信息的备注性的文字）
-            if isinstance(col[0], str) and isinstance(col[2], str) and isinstance(col[5], datetime.datetime):
+            if isinstance(col[0], str) and isinstance(col[2], str) and isinstance(col[6], datetime.datetime):
                 fund_name, category, strategy, administrator, region, manager, establish_time = \
-                    col[0], sheet_list[category_index], col[1], col[2], col[3], col[4], col[5].strftime('%Y-%m-%d')
+                    col[0], sheet_list[category_index], col[1], col[2], col[3], col[4], col[6].strftime('%Y-%m-%d')
                 # print(fund_name, strategy, administrator, region, manager, establish_time)
                 input_info = (fund_name, category, strategy, administrator, region, manager, establish_time)
                 try:
@@ -128,19 +131,19 @@ def write_fund_nval(conn, cursor, fund_info_content_list):
             break
 
         # 获取时间序列
-        nval_time_list = fund_info_content.iloc[7: nval_end_index, 0].apply(lambda x: x.strftime('%Y-%m-%d'))
+        nval_time_list = fund_info_content.iloc[date_start_index: nval_end_index, 0].apply(lambda x: x.strftime('%Y-%m-%d'))
         nval_time_list = list(np.array(nval_time_list))
 
         for index, col in fund_info_content.iteritems():
             if index == 'Unnamed: 0':
                 continue
-            if isinstance(col[0], str) and isinstance(col[2], str) and isinstance(col[5], datetime.datetime):
+            if isinstance(col[0], str) and isinstance(col[2], str) and isinstance(col[6], datetime.datetime):
                 fund_name = col[0]
                 if fund_name == '沪深300指数':
                     break
-                for j in range(7, nval_end_index):
+                for j in range(date_start_index, nval_end_index):
                     if is_number(col[j]) and col[j] is not np.nan:
-                        input_info = (fund_name, nval_time_list[j - 7], col[j])
+                        input_info = (fund_name, nval_time_list[j - date_start_index], col[j])
                         try:
                             cursor.execute("insert into fund_nval(fund_name, nval_date, nval) values(?, ?, ?)", input_info)
                         except sqlite3.IntegrityError as e:
@@ -181,7 +184,7 @@ def update_database(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--input_file', type=str, help='输入文件', default='../../tests/重点观察私募周报（2023年第18周，2023.05.05）.xlsx')
+    parser.add_argument('--input_file', type=str, help='输入文件', default='../../tests/重点观察私募周报（2023年第32周，2023.08.11）.xlsx')
     parser.add_argument('--output_file', type=str, help='输出文件', default='test2.db')
     parser.add_argument('--is_create_new_database', type=int, help='是否新建数据库', default=0)
     parser.add_argument('--is_delete_old_database', type=int, help='是否删除老数据库', default=0)

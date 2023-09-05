@@ -318,7 +318,8 @@ def daixiao_comp_product_shelves_info(start_date,end_date,df1,df2,df7,result_typ
     底层数据_代销产品货架_代销机构.replace('开放中长期','开放中长期（半年到一年）', inplace = True)
     底层数据_代销产品货架_代销机构.replace('开放长期','开放长期（一年以上）', inplace = True)
     底层数据_代销产品货架_代销机构.rename(columns={'BenchmarkMin':'业绩基准', '产品登记编码':'产品数量'}, inplace = True)    
-        
+    底层数据_代销产品货架_代销机构['达标率'] = 底层数据_代销产品货架_代销机构['达标率'].fillna('-')   
+    底层数据_代销产品货架_代销机构['业绩基准'] = 底层数据_代销产品货架_代销机构['业绩基准'].fillna('-')
     # 底层数据_代销产品货架_代销机构.drop_duplicates().to_excel(path_outputdir+r'\底层数据_代销产品货架_代销机构.xlsx')
     warnings.filterwarnings("default")
     return 底层数据_代销产品货架_代销机构

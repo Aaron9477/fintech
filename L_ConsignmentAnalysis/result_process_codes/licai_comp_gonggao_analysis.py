@@ -65,8 +65,7 @@ def licai_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
     #df2_temp = df2[(df2['代销开始日']<end_date)&(df2['代销结束日']>start_date)]
     df3_temp = pd.merge(df1_temp,df2,how='inner',left_on=['RegistrationCode','FinProCode'],right_on=['产品登记编码','普益代码'])#合并匹配基础数据和代销数据
     df4_temp = exclude_mother_child_relation(df3_temp)
-    df1_temp_list=df4_temp['FinProCode'].drop_duplicates()#剔除母子公司之间建立的代销关系
-    
+    df1_temp_list=df4_temp['FinProCode'].drop_duplicates()
     df1_temp = sectorize(df1_temp,type = result_type)
     #将风险评级赋分
     df1_temp['risk_score']=''
@@ -92,28 +91,27 @@ def licai_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
     df7['interval_ret_annual']=df8.apply(lambda x : func8(x),axis=1)
     df5_temp = pd.merge(df1_temp,df7['interval_ret_annual'],how='left',on='FinProCode')
     #计算业绩基准均值
-    group_=df5_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin']].mean()
-    group_.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
+    group_=df5_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].dropna().mean()).rename('BenchMin_ave').to_frame()
+    # group_.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
     group_.replace(0,np.NaN,inplace=True)
     df5_temp=pd.merge(df5_temp,group_,left_on=['理财公司简称','InvestmentType'],right_index=True)
 
     for m in ['否','是']:
         if m=='是':
             df5_temp=df5_temp[df5_temp['FinProCode'].isin(df1_temp_list)]
-        底层数据_公告分析_理财公司=df5_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin']].mean()
-        底层数据_公告分析_理财公司.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
+        底层数据_公告分析_理财公司=df5_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].dropna().mean()).rename('BenchMin_ave').to_frame()
+        # 底层数据_公告分析_理财公司.rename(columns={'BenchmarkMin':'BenchMin_ave'}, inplace = True)
         #计算低于基准产品比例
-        df5_temp['low_ret'] = df5_temp['interval_ret_annual'] < df5_temp['BenchMin_ave']
-        底层数据_公告分析_理财公司['count']=df5_temp.groupby(['理财公司简称','InvestmentType'])['low_ret'].count()
-        底层数据_公告分析_理财公司['count_low']=df5_temp.groupby(['理财公司简称','InvestmentType'])['low_ret'].sum()
-        底层数据_公告分析_理财公司['低于基准比例']=底层数据_公告分析_理财公司['count_low']/底层数据_公告分析_理财公司['count']
-        底层数据_公告分析_理财公司=底层数据_公告分析_理财公司.drop(['count','count_low'], axis=1)
-        def low_rate(x):
-            if np.isnan(x[0]):
+        def low_bench_ratio(x):
+            try:
+                x = x.drop_duplicates(subset='RegistrationCode')
+                x = x.dropna(subset=['BenchmarkMin','interval_ret_annual'])
+                num = len(x)
+                lower = len(x[x['interval_ret_annual']<x['BenchmarkMin']])
+                return lower / num
+            except:
                 return np.NaN
-            else:
-                return x[1]
-        底层数据_公告分析_理财公司['低于基准比例']=底层数据_公告分析_理财公司[['BenchMin_ave','低于基准比例']].apply(low_rate,axis=1)
+        底层数据_公告分析_理财公司['低于基准比例']=df5_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin','interval_ret_annual','RegistrationCode']].apply(low_bench_ratio)
         
         #复制index
         底层数据_公告分析_理财公司['type_']=底层数据_公告分析_理财公司.index.get_level_values('InvestmentType')
@@ -125,7 +123,7 @@ def licai_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
                 底层数据_公告分析_理财公司.loc[i,'rank']=底层数据_公告分析_理财公司.loc[底层数据_公告分析_理财公司['type_']==j]['BenchMin_ave'].rank(method='min',ascending=False)[i]
                 底层数据_公告分析_理财公司.loc[i,'rank_sum']=底层数据_公告分析_理财公司.loc[底层数据_公告分析_理财公司['type_']==j]['BenchMin_ave'].count()
         #计算市场平均基准比例
-        底层数据_公告分析_理财公司=pd.merge(底层数据_公告分析_理财公司,df5_temp.groupby(['InvestmentType'])['BenchmarkMin'].mean(),left_on='type_',right_index=True)
+        底层数据_公告分析_理财公司=pd.merge(底层数据_公告分析_理财公司,df5_temp.groupby(['InvestmentType'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].dropna().mean()).rename('BenchmarkMin').to_frame(),left_on='type_',right_index=True)
         #计算加权风险等级
         df5_temp['risk_score']=pd.to_numeric(df5_temp['risk_score'])
         底层数据_公告分析_理财公司['weight_risk']=df5_temp.groupby(['理财公司简称','InvestmentType']).apply(lambda x: np_average(x['risk_score'], weights=x['AssetValue']))
@@ -145,6 +143,8 @@ def licai_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
     底层数据_公告分析_理财公司.replace('固定收益类','固定收益类（非现金）', inplace = True)
     底层数据_公告分析_理财公司.replace('商品及金融衍生品类','商品及衍生品类', inplace = True)
     底层数据_公告分析_理财公司.set_index('company',inplace=True)
+    底层数据_公告分析_理财公司.loc[:,['BenchMin_ave','低于基准比例','rank']] = 底层数据_公告分析_理财公司.loc[:,['BenchMin_ave','低于基准比例','rank']].fillna('-')
+
     
     return 底层数据_公告分析_理财公司
 

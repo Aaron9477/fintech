@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
     df['一年收益率'] = df['统计日净值'] / df['统计日一年前净值'] - 1
 
-    df.to_excel("基金信息_" + statistics_date + ".xlsx")
+    df.to_excel("基金信息2_" + statistics_date + ".xlsx")
 
 
 

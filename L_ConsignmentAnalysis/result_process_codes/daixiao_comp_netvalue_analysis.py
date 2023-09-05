@@ -179,11 +179,11 @@ def daixiao_comp_netvalue_analysis(start_date,df1,df2,df7,result_type='single'):
         净值指标_代销机构['oneyear_return']=净值指标_加权平均.apply(func_oneyear,axis=1)
         #计算最大回撤
         净值指标_代销机构['max_markdown']= 净值指标_加权平均.apply(lambda x : emp.max_drawdown((x[-53:]/x.shift(1)[-53:]-1).dropna()),axis=1)
-        #计算夏普比率  
-        净值指标_代销机构['sharpo']=净值指标_代销机构['oneyear_return']/abs(净值指标_代销机构['max_markdown'])
         #净值指标_代销机构['sharpo']= 净值指标_加权平均.apply(lambda x : emp.sharpe_ratio((x[-53:]/x.shift(1)[-53:]-1).dropna(), risk_free=0, annualization=52),axis=1)
         #计算波动率
         净值指标_代销机构['violia']=净值指标_加权平均.apply(lambda x : func_vio(x),axis=1)
+        #计算夏普比率  
+        净值指标_代销机构['sharpo']=净值指标_代销机构['oneyear_return']/abs(净值指标_代销机构['violia'])
         #计算资产规模
         净值指标_代销机构['Asset'] = df8_temp[周度时间_list].groupby(['代销机构','InvestmentType'])['AssetValue'].sum()
     
