@@ -8,7 +8,7 @@
 # --------------------------------
 import pandas as pd
 
-def sectorize(data,type = 'single'):
+def sectorize(data,type = 'single',append=False):
     '''
     function:传入基础数据和代销数据合并后的表，根据type将对应的公司名称字段内容改为公司类型字段内容，以方便计算板块数据。
     params:
@@ -30,4 +30,6 @@ def sectorize(data,type = 'single'):
             df[felid] = df['comp_type']
         for felid in [i for i in ['理财公司简称','发行机构'] if i in df.columns]:
             df[felid] = df['ParentCompType']
+    if append:
+        df=pd.concat([data,df])
     return df

@@ -1,4 +1,5 @@
 ################ 本项目目的为银行理财代销图鉴相关依赖表生成
+一、整体说明
 （1）data_process_codes下包含数据清洗相关的一些代码，以main开头的可独自运行，其余的会由其他代码调用；
 （2）output_dir下的文件为代码输出文件，为各个依赖sheet，生成后后续将复制到图鉴的各个依赖表中，根据文件名和图鉴中的sheet名字可以对应应该如何复制，注意部分表复制时并没有用到所有列；
 （3）raw_datas下的文件为原始数据，一部分需要由数据库导出，一部分由data_process_codes下由“main”开头的文件生成，更具体的说明在下面的目录树后面有；
@@ -87,12 +88,12 @@ ROOT
 │      
 ├─raw_datas
 │      all_nv_data_new.csv #这个文件是由main_first_累计净值填充.py+py_all_net_value_****.csv生成，对净值数据进行了填充等清洗工作。
-│      py_all_net_value_0704.csv #这个文件是数据库导出的净值数据
+│      理财产品净值数据.csv #这个文件是数据库导出的净值数据
 │      wind_bank_info_230628.csv #这个文件是由万得导出的银行信息数据
-│      代销数据0526.xlsx #这个文件是数据库导出的代销关系数据
+│      代销数据.xlsx.xlsx #这个文件是数据库导出的代销关系数据
 │      周度净值_均值处理_未筛选存续期.xlsx #这个文件是由main_周度加权平均净值处理（df7）.py生成，对母子产品的净值进行了加权处理
-│      周度日期20220101-20230630.xlsx #这个文件中存储了每周最后一个交易日
-│      基础数据.xlsx #这个文件是各个产品的数据
+│      周度日期.xlsx #这个文件中存储了每周最后一个交易日
+│      产品基础数据.xlsx #这个文件是各个产品的数据
 │      现金管理类_七日年化.xlsx #这个文件由main_xianjinguanli_df9result.py生成
 │      
 └─result_process_codes
@@ -133,3 +134,12 @@ ROOT
             licai_comp_product_recommendation.cpython-39.pyc
             licai_comp_product_shelves_info.cpython-39.pyc
             product_fees.cpython-39.pyc
+
+二、更新步骤
+（1）更新数据，将最新的基础数据、销售数据、净值数据、银行信息数据、周度日期数据；
+（2）运行data_process_codes中三个一main开头的代码；
+（3）修改main.ipynb中的全局变量设置；
+（4）运行main.ipynb中的相应cells;
+（5）将output_dir中对应的表格复制到图鉴对应的sheet中去，注意有一些sheet并不是完全和表格中一模一样，可能要删去一些行，也可能要筛选最近日期；
+（6）测试。
+

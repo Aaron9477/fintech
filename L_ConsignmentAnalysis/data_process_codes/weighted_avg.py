@@ -8,6 +8,8 @@
 #              weighted_avg2- 
 # --------------------------------
 
+from math import ceil, floor
+import re
 import numpy as np
 import pandas as pd
 
@@ -35,6 +37,31 @@ def weighted_avg_2(x):
     return:-
     '''
     try:
-        return np.average(x.drop_duplicates(subset='RegistrationCode').dropna()['年化收益'].values,weights=x.drop_duplicates(subset='RegistrationCode').dropna()['AssetValue'].values)
+        x1=x.drop_duplicates(subset='RegistrationCode').dropna()
+        return np.average(x1['年化收益'].values,weights=x1['AssetValue'].values)
     except:
         return np.nan
+    
+def hash_string(s: str,p:np.float64,round=True) ->np.float64 :
+    """_summary_
+
+    Parameters
+    ----------
+    s : str
+        _description_
+    p : np.float64
+        _description_
+
+    Returns
+    -------
+    np.float64
+        _description_
+    """    
+    code_gbk=np.array([int(char.encode("gbk").hex(),16) for char in s])
+    powarray=np.power(p,np.arange(start=len(code_gbk),stop=0,step=-1)-1)
+    hash_value=np.sum(code_gbk*powarray)
+    return hash_value
+
+def test_hash(s:str,p,round=True):
+    l=re.split(r"\d{1,2}",s)
+    return [hash_string(l[0]+str(i)+l[1],p,round)  for i in range(1,11) ]   

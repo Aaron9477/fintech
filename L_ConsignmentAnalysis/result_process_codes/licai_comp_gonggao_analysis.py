@@ -145,6 +145,7 @@ def licai_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
     底层数据_公告分析_理财公司.set_index('company',inplace=True)
     底层数据_公告分析_理财公司.loc[:,['BenchMin_ave','低于基准比例','rank']] = 底层数据_公告分析_理财公司.loc[:,['BenchMin_ave','低于基准比例','rank']].fillna('-')
 
-    
+    df7.drop(columns='interval_ret_annual',inplace=True) 
+    底层数据_公告分析_理财公司['rank_result']=底层数据_公告分析_理财公司['rank'].astype(str)+'/'+底层数据_公告分析_理财公司['rank_sum'].astype(str)
+   
     return 底层数据_公告分析_理财公司
-

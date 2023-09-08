@@ -37,7 +37,10 @@ def licai_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='single
     def func11(x):
         #计算达标率
         try:
-            return list(x.drop_duplicates(subset='RegistrationCode').dropna()['年化收益'] > (x.drop_duplicates(subset='RegistrationCode').dropna()['BenchmarkMin'] * 0.01)).count(True)/len(x.drop_duplicates(subset='RegistrationCode').dropna())
+            unique_data = x.drop_duplicates(subset='RegistrationCode').dropna()
+            condition_met = unique_data['年化收益'] > (unique_data['BenchmarkMin'] * 0.01)
+            ratio = condition_met.sum() / len(unique_data)
+            return ratio
         except:
             return np.nan
     底层数据_固定收益类货架_理财公司 = pd.DataFrame()
@@ -46,7 +49,7 @@ def licai_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='single
     while date >= start_date:
         print(" -Processing date ",date)
         month_begin_date = date - dateutil.relativedelta.relativedelta(months=1) + dateutil.relativedelta.relativedelta(days=1)#月初
-        df1_temp = preprocess(df1,month_begin_date)
+        df1_temp = preprocess(df1,end_date)
         df1_temp = df1_temp[df1_temp['InvestmentType']=='固定收益类']
         df2_temp = df2[(df2['代销开始日']<date)&(df2['代销结束日']>month_begin_date)]
         df3_temp = pd.merge(df1_temp,df2_temp,how='inner',left_on=['RegistrationCode','FinProCode'],right_on=['产品登记编码','普益代码'])#合并匹配基础数据和代销数据
@@ -62,7 +65,6 @@ def licai_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='single
         #根据result_type做数据修改
         df3_temp = sectorize(df3_temp,type=result_type)
         df4_temp = sectorize(df4_temp,type=result_type)
-        
         def func1(x):#需要用到agg处的函数
             return len(x.drop_duplicates())
         
@@ -307,7 +309,6 @@ def licai_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='single
         底层数据_固定收益类货架_理财公司 = pd.concat([底层数据_固定收益类货架_理财公司,底层数据_固定收益类货架_理财公司_temp],axis=0,ignore_index=True)#合并不同时期的数据
         date = end_date - dateutil.relativedelta.relativedelta(months=i)#date减一个月
         i= i+1
-
         
         #一些值的替换处理
     底层数据_固定收益类货架_理财公司=底层数据_固定收益类货架_理财公司[-底层数据_固定收益类货架_理财公司.MinInvestTimeType.isin(['数据缺失','其他'])]
@@ -325,7 +326,7 @@ def licai_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='single
     底层数据_固定收益类货架_理财公司.rename(columns={'BenchmarkMin':'业绩基准', '产品登记编码':'产品数量'}, inplace = True)
     底层数据_固定收益类货架_理财公司['达标率'] = 底层数据_固定收益类货架_理财公司['达标率'].fillna('-')
     底层数据_固定收益类货架_理财公司['业绩基准'] = 底层数据_固定收益类货架_理财公司['业绩基准'].fillna('-')
-    # 底层数据_固定收益类货架_理财公司.drop_duplicates().to_excel(path_outputdir+r'\底层数据_固定收益类货架_理财公司.xlsx')
-    # 底层数据_固定收益类货架_理财公司
+    底层数据_固定收益类货架_理财公司['匹配字段']=底层数据_固定收益类货架_理财公司[['发行机构','MinInvestTimeType','固收增强分类_补充子产品','是否剔除母子关系','open_type']].sum(axis=1)
+
     warnings.filterwarnings("default")
     return 底层数据_固定收益类货架_理财公司

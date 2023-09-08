@@ -25,10 +25,10 @@ def WeeklyYield_to_rangereturn_to_annulized(x,length = 13,frequency = 1):
         x=pd.DataFrame()
         x['LatestWeeklyYield'] = temp.to_frame()
         x['EndDate'] = temp.index
-    
-    if(x.sort_values('EndDate',ascending=True).iloc[-1].empty):#最近一期是为空
+
+    if(x.sort_index(ascending=True).iloc[-1].empty):#最近一期是为空
         return
-    x = x.sort_values('EndDate',ascending=True)['LatestWeeklyYield'].fillna(method='ffill')
+    x = x.sort_index(ascending=True)['LatestWeeklyYield'].fillna(method='ffill')
     ind = []
     for i in range(0,length):
         ind.append(int(-1-i*( 7 / frequency)))

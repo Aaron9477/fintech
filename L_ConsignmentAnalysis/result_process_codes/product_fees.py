@@ -15,6 +15,8 @@ import pandas as pd
 from data_process_codes.preprocess import exclude_mother_child_relation, preprocess
 from sectorize import sectorize
 
+def print_1():
+    print('2')
 
 def product_fees(start_date,end_date,df1,df2,if_sector = False):
     '''
@@ -43,7 +45,7 @@ def product_fees(start_date,end_date,df1,df2,if_sector = False):
     while date >= start_date:
         print(" -Processing date ",date)
         month_begin_date = date - dateutil.relativedelta.relativedelta(months=1) + dateutil.relativedelta.relativedelta(days=1)#月初
-        df1_temp = preprocess(df1,month_begin_date)
+        df1_temp = preprocess(df1,end_date)
         df1_temp['manage_fee'] = df1_temp[['manage_fee_y','manage_fee_x']].apply(func4,axis=1)#新生成一列管理费，综合使用之前的两列数据
         df1_temp['sale_fee'] = df1_temp[['sale_fee_y','sale_fee_x']].apply(func4,axis=1)#新生成一列销售费，综合使用之前的两列数据
         df2_temp = df2[(df2['代销开始日']<date)&(df2['代销结束日']>month_begin_date)]

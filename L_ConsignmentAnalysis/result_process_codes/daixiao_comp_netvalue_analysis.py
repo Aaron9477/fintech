@@ -46,36 +46,25 @@ def cal_score(type,AssetValue_rank,interval_ret_annual_rank,
                       max_draw_down_rank * coef_mdd + sharpe_rank * coef_sharpe
     return score
 
-def func_three(x):#计算近三个月收益率，不满三个月的使用已有数据三月化
-    x=x.iloc[-13:]
-    if x.notna().sum()==0:
-        return np.nan
-    else:
-        if(not np.isnan(x[-1]))&(not np.isnan(x[0])):
-            return x[-1]/x[0]-1
-        else:
-            return emp.annual_return((x/x.shift(1)-1).dropna(),annualization=13)
-
-def func_halfyear(x):#计算近半年收益率，不满半年的使用已有数据半年化
-    x=x.iloc[-26:]
-    if x.notna().sum()==0:
-        return np.nan
-    else:
-        if(not np.isnan(x[-1]))&(not np.isnan(x[0])):
-            return x[-1]/x[0]-1
-        else:
-            return emp.annual_return((x/x.shift(1)-1).dropna(),annualization=26)
-
-
-def func_oneyear(x):#计算近一年收益率，不满一年的使用已有数据年化
+def last_n_week_return(x,week_num):#计算近n周收益率，不满一年的使用已有数据n周化
     x=x.iloc[-52:]
     if x.notna().sum()==0:
         return np.nan
     else:
-        if(not np.isnan(x[-1]))&(not np.isnan(x[0])):
-            return x[-1]/x[0]-1
+        if(not np.isnan(x.iloc[-week_num]))&(not np.isnan(x.iloc[-1])):
+            return x.iloc[-1]/x.iloc[-week_num]-1
         else:
-            return emp.annual_return((x/x.shift(1)-1).dropna(),annualization=52)
+            if (not np.isnan(x.iloc[-1])):
+                x=x.fillna(method='ffill')
+                return emp.annual_return((x/x.shift(1).iloc[-week_num:]-1).dropna(),annualization=week_num)
+            else:
+                k=-1
+                for i in range(-1,-week_num-1,-1):
+                    if (not np.isnan(x.iloc[i])):
+                        k=i
+                        break
+                x=x.iloc[:k+1].fillna(method='ffill')
+                return emp.annual_return((x/x.shift(1)-1).dropna(),annualization=week_num)
 
 
 def func_vio(x):#计算近一年波动率，不满一年的计算期间波动率
@@ -148,6 +137,7 @@ def daixiao_comp_netvalue_analysis(start_date,df1,df2,df7,result_type='single'):
     return:
         - 底层数据_净值指标_代销机构:【底层数据_净值指标_代销机构】依赖表，用于更新理财图鉴。
     ''' 
+    print(" *生成【底层数据_净值指标_代销机构】依赖表, ",start_date)
     df1_temp=preprocess(df1,start_date,False)
     df1_temp.replace('固定收益类','固定收益类（非现金）', inplace = True)
     df1_temp.replace('商品及金融衍生品类','商品及衍生品类', inplace = True)
@@ -174,9 +164,9 @@ def daixiao_comp_netvalue_analysis(start_date,df1,df2,df7,result_type='single'):
     
         净值指标_代销机构=pd.DataFrame(columns=['threemon_ret','sixmon_ret','oneyear_return'],index=净值指标_加权平均.index)
         #净值指标_代销机构_否.index=净值指标_加权平均.index
-        净值指标_代销机构['threemon_ret']=净值指标_加权平均.apply(func_three,axis=1)
-        净值指标_代销机构['sixmon_ret']=净值指标_加权平均.apply(func_halfyear,axis=1)
-        净值指标_代销机构['oneyear_return']=净值指标_加权平均.apply(func_oneyear,axis=1)
+        净值指标_代销机构['threemon_ret']=净值指标_加权平均.apply(last_n_week_return,week_num=13,axis=1)
+        净值指标_代销机构['sixmon_ret']=净值指标_加权平均.apply(last_n_week_return,week_num=26,axis=1)
+        净值指标_代销机构['oneyear_return']=净值指标_加权平均.apply(last_n_week_return,week_num=52,axis=1)
         #计算最大回撤
         净值指标_代销机构['max_markdown']= 净值指标_加权平均.apply(lambda x : emp.max_drawdown((x[-53:]/x.shift(1)[-53:]-1).dropna()),axis=1)
         #净值指标_代销机构['sharpo']= 净值指标_加权平均.apply(lambda x : emp.sharpe_ratio((x[-53:]/x.shift(1)[-53:]-1).dropna(), risk_free=0, annualization=52),axis=1)

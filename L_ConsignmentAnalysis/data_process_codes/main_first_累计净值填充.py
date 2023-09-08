@@ -4,12 +4,13 @@
 # @Author    : WSS
 # @File      : main_first_累计净值填充
 # @Project   : 银行理财代销图鉴
-# @Function  ：使用【py_all_net_value_0704】生成【all_nv_data_new】依赖表
+# @Function  ：使用【理财产品净值数据】生成【all_nv_data_new】依赖表
 # --------------------------------
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from parameter import *
 
 def function(b):
     if np.isnan(b) == False:
@@ -52,10 +53,9 @@ def result_check(df):
     
     return result
 
-def nav_fill(code):
+def nav_fill(code,df):
     
     '''读取数据并删除单位净值和累计净值均为空的行'''
-    global df
     df_test = df[df['FinProCode'] == code]
     nan_nav_index = df_test[df_test['UnitNV'].isnull()&df_test['AccumulatedUnitNV'].isnull()].index
     df_test = df_test.drop(nan_nav_index)
@@ -69,7 +69,6 @@ def nav_fill(code):
     for index,row in df_test.iloc[::-1].iterrows():
         if row['UnitNV'] == 1 and (np.isnan(row['AccumulatedUnitNV']) or row['AccumulatedUnitNV'] == 1):
             n = n+1
-            print(code, index, '末尾删除')
         else:
             break
     if n != 0:
@@ -186,20 +185,22 @@ def nav_fill(code):
     #print(diff_index)
     #print('分红'+str(len(dividend))+'次，分红时的index为：')
     #print(dividend)
-    
     return result_check(df_test)
 
 #修改文件路径
-df = pd.read_csv('./raw_datas/py_all_net_value_0704.csv')
-path_outputdir = './raw_datas'
+def fill_accumulated_nav():
+    df = pd.read_csv(path_all净值数据)
 
-df['EndDate'] = pd.to_datetime(df['EndDate'])
-df = df[['EndDate','FinProCode','UnitNV','AccumulatedUnitNV']] 
+    df['EndDate'] = pd.to_datetime(df['EndDate'])
+    df = df[['EndDate','FinProCode','UnitNV','AccumulatedUnitNV']] 
 
-result=pd.DataFrame(columns=df.columns)
-code_list=df['FinProCode'].drop_duplicates()  
-for i in tqdm(code_list,desc="数据填充进度："):
+    result=pd.DataFrame(columns=df.columns)
+    code_list=df['FinProCode'].drop_duplicates()  
+    for i in tqdm(code_list,desc="数据填充进度："):
     # print(i)
-    result_=nav_fill(i)
-    result=pd.concat([result,result_])
-result.to_csv(path_outputdir+r'\all_nv_data_new.csv')
+        result_=nav_fill(i,df)
+        result=pd.concat([result,result_])
+    return result 
+    result.to_csv(r'./raw_datas/all_nv_data_new.csv')
+
+

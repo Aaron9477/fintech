@@ -31,11 +31,13 @@ def daixiao_comp_daixiaoproduct_info(start_date,end_date,df1,df2,result_type='si
     while date >= start_date:
         print(" -Processing date ",date)
         month_begin_date = date - dateutil.relativedelta.relativedelta(months=1) + dateutil.relativedelta.relativedelta(days=1)#月初
-        df1_temp = preprocess(df1,month_begin_date)
+        df1_temp = preprocess(df1,end_date)
         df2_temp = df2[(df2['代销开始日']<date)&(df2['代销结束日']>month_begin_date)]
-        df3_temp = df3_temp = pd.merge(df1_temp,df2_temp,how='inner',left_on=['RegistrationCode','FinProCode'],right_on=['产品登记编码','普益代码'])#合并匹配基础数据和代销数据
+        df3_temp = pd.merge(df1_temp,df2_temp,how='inner',left_on=['RegistrationCode','FinProCode'],right_on=['产品登记编码','普益代码'])#合并匹配基础数据和代销数据
         df3_temp['代销机构_copy'] = df3_temp['代销机构'].copy()
+        df3_temp=df3_temp[df3_temp['发行机构'].str.contains('理财')]
         df4_temp = exclude_mother_child_relation(df3_temp)#剔除母子公司之间建立的代销关系
+
 
         #根据result_type做数据修改
         df3_temp = sectorize(df3_temp,type=result_type)
@@ -100,8 +102,6 @@ def daixiao_comp_daixiaoproduct_info_draw(start_date,end_date,df_daixiao_comp_da
             底层数据_代销产品概况_代销机构_绘图 = pd.merge(底层数据_代销产品概况_代销机构_绘图,底层数据_代销产品概况_代销机构_绘图_temp,how='left',left_index=True,right_index=True).drop_duplicates()
         date = end_date - dateutil.relativedelta.relativedelta(months=i)#date减一个月
         i = i + 1
-    
-    # 底层数据_代销产品概况_代销机构_绘图.to_excel(path_outputdir+"/底层数据_代销产品概况_代销机构_绘图.xlsx")
-    # 底层数据_代销产品概况_代销机构_绘图 
+
     return 底层数据_代销产品概况_代销机构_绘图  
 

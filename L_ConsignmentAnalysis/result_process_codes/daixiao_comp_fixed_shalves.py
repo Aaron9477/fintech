@@ -37,7 +37,10 @@ def daixiao_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='sing
     def func11(x):
         #计算达标率
         try:
-            return list(x.drop_duplicates(subset='RegistrationCode').dropna()['年化收益'] > (x.drop_duplicates(subset='RegistrationCode').dropna()['BenchmarkMin']*0.01)).count(True)/len(x.drop_duplicates(subset='RegistrationCode').dropna())
+            unique_data = x.drop_duplicates(subset='RegistrationCode').dropna()
+            condition_met = unique_data['年化收益'] > (unique_data['BenchmarkMin'] * 0.01)
+            ratio = condition_met.sum() / len(unique_data)
+            return ratio
         except:
             return np.nan
     底层数据_固定收益类货架_代销机构 = pd.DataFrame()
@@ -46,7 +49,7 @@ def daixiao_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='sing
     while date >= start_date:
         print(" -Processing date ",date)
         month_begin_date = date - dateutil.relativedelta.relativedelta(months=1) + dateutil.relativedelta.relativedelta(days=1)#月初
-        df1_temp = preprocess(df1,month_begin_date)
+        df1_temp = preprocess(df1,end_date)
         df2_temp = df2[(df2['代销开始日']<date)&(df2['代销结束日']>month_begin_date)]
         df3_temp = pd.merge(df1_temp,df2_temp,how='inner',left_on=['RegistrationCode','FinProCode'],right_on=['产品登记编码','普益代码'])#合并匹配基础数据和代销数据
         df3_temp = df3_temp.drop(df3_temp [(df3_temp['MinInvestTimeType']=='数据缺失')|(df3_temp['MinInvestTimeType']=='其他')].index)#处理数据缺失的情况
@@ -63,7 +66,6 @@ def daixiao_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='sing
         df4_temp = sectorize(df4_temp,type=result_type)
         def func1(x):#需要用到agg处的函数
             return len(x.drop_duplicates())
-
         
         #先计算不剔除母子关系的情况（用数据df3_temp）
         temp1_1 = pd.concat([df3_temp.groupby('代销机构').apply(lambda x:x.groupby(['代销机构_copy','MinInvestTimeType','固收增强分类_补充子产品','open_type'])['产品登记编码'].apply(func1)).groupby(level=[0,2,3,4]).agg('mean'),
@@ -130,7 +132,6 @@ def daixiao_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='sing
         temp1_7['是否剔除母子关系'] = '否'
         temp1_7['固收增强分类_补充子产品'] = '全部'
         temp1_7['MinInvestTimeType'] = '全部'
-        
         temp1_8 = pd.concat([df3_temp.groupby('代销机构').apply(lambda x:x.groupby(['代销机构_copy'])['产品登记编码'].apply(func1)).groupby(level=[0]).agg('mean'),
                             df3_temp.groupby(['代销机构'])[['BenchmarkMin','RegistrationCode']].apply(lambda x:x.drop_duplicates(subset='RegistrationCode')['BenchmarkMin'].mean()).rename('BenchmarkMin'),
                             df3_temp.groupby(['代销机构'])['发行机构'].apply(sort_by_frequency_return_top_n_join_with_sign,ascending=False,n=2,sign=','),
@@ -321,6 +322,7 @@ def daixiao_comp_fixed_shalves(start_date,end_date,df1,df2,df7,result_type='sing
     底层数据_固定收益类货架_代销机构.rename(columns={'BenchmarkMin':'业绩基准', '产品登记编码':'产品数量'}, inplace = True)    
     底层数据_固定收益类货架_代销机构['达标率'] = 底层数据_固定收益类货架_代销机构['达标率'].fillna('-')
     底层数据_固定收益类货架_代销机构['业绩基准'] = 底层数据_固定收益类货架_代销机构['业绩基准'].fillna('-')
+    底层数据_固定收益类货架_代销机构['匹配字段']=底层数据_固定收益类货架_代销机构[['发行机构','MinInvestTimeType','固收增强分类_补充子产品','是否剔除母子关系','open_type']].sum(axis=1)
 
     # 底层数据_固定收益类货架_代销机构.drop_duplicates().to_excel(path_outputdir+r'\底层数据_固定收益类货架_代销机构.xlsx')
     warnings.filterwarnings("default")

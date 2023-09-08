@@ -41,11 +41,12 @@ def hezuoproduct_num(start_date,end_date,df1,df2,if_sector = False):
     while date >= start_date:
         print(" -Processing date ",date)
         month_begin_date = date - dateutil.relativedelta.relativedelta(months=1) + dateutil.relativedelta.relativedelta(days=1)#月初
-        df1_temp = preprocess(df1,month_begin_date)
+        df1_temp = preprocess(df1,date)
         df2_temp = df2[(df2['代销开始日']<date)&(df2['代销结束日']>month_begin_date)]
         df3_temp = pd.merge(df1_temp,df2_temp,how='inner',left_on=['RegistrationCode','FinProCode'],right_on=['产品登记编码','普益代码'])#合并匹配基础数据和代销数据
         df3_temp['代销机构_copy'] = df3_temp['代销机构'].copy()
         df3_temp['发行机构_copy'] = df3_temp['发行机构'].copy()
+        df3_temp=df3_temp[df3_temp['发行机构'].str.contains('理财')]
         df4_temp = exclude_mother_child_relation(df3_temp)#剔除母子公司之间建立的代销关系
         if if_sector:
             df3_temp_licai_sector = sectorize(df3_temp,type='licai_sector')

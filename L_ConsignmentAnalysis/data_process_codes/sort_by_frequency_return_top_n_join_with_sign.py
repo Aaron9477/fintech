@@ -7,7 +7,9 @@
 # @Function  ：根据元素出现的次数排名，再用符号连接前n个，返回字符串。
 # --------------------------------
 
-def sort_by_frequency_return_top_n_join_with_sign(x,ascending=False,n=2,sign=','):
+import pandas as pd
+
+def sort_by_frequency_return_top_n_join_with_sign(x: pd.DataFrame,ascending=False,n=2,sign=','):
     '''
     function:根据元素出现的次数排名，再用符号连接前n个，返回字符串。
     params:

@@ -10,7 +10,6 @@
 import pandas as pd
 import numpy as np
 import empyrical as emp
-
 from preprocess import exclude_mother_child_relation, preprocess
 from sectorize import sectorize
 
@@ -143,7 +142,7 @@ def daixiao_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
                 return lower / num
             except:
                 return np.NaN
-        底层数据_公告分析_代销机构['低于基准比例']=df3_temp.groupby(['理财公司简称','InvestmentType'])[['BenchmarkMin','interval_ret_annual','RegistrationCode']].apply(low_bench_ratio)
+        底层数据_公告分析_代销机构['低于基准比例']=df3_temp.groupby(['代销机构','InvestmentType'])[['BenchmarkMin','interval_ret_annual','RegistrationCode']].apply(low_bench_ratio)
         #复制index
         底层数据_公告分析_代销机构['type_']=底层数据_公告分析_代销机构.index.get_level_values('InvestmentType')
         底层数据_公告分析_代销机构['代销机构']=底层数据_公告分析_代销机构.index.get_level_values('代销机构')
@@ -175,4 +174,6 @@ def daixiao_comp_gonggao_analysis(start_date,df1,df2,df7,result_type='single'):
     底层数据_公告分析_代销机构.replace('商品及金融衍生品类','商品及衍生品类', inplace = True)
     底层数据_公告分析_代销机构.set_index('代销机构',inplace=True)
     底层数据_公告分析_代销机构.loc[:,['BenchMin_ave','低于基准比例','rank']] = 底层数据_公告分析_代销机构.loc[:,['BenchMin_ave','低于基准比例','rank']].fillna('-')
+    df7.drop(columns='interval_ret_annual',inplace=True)
+    底层数据_公告分析_代销机构['rank_result']=底层数据_公告分析_代销机构['rank'].astype(str)+'/'+底层数据_公告分析_代销机构['rank_sum'].astype(str)
     return 底层数据_公告分析_代销机构

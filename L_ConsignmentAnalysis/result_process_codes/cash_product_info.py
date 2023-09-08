@@ -20,7 +20,7 @@ from data_process_codes.preprocess import exclude_mother_child_relation, preproc
 from data_process_codes.weighted_avg import weighted_avg, weighted_avg_2
 from sectorize import sectorize
 
-def cash_product_info_draw(start_date,end_date,df1,df2,df9,if_sector = False):
+def cash_product_return_draw(start_date,end_date,df1:pd.DataFrame,df2,df9,if_sector = False):
     '''
     function:生成【底层数据_现金管理类产品七日年化收益率作图】依赖表
     params:
@@ -34,8 +34,10 @@ def cash_product_info_draw(start_date,end_date,df1,df2,df9,if_sector = False):
         - 底层数据_现金管理类产品七日年化收益率作图:【底层数据_现金管理类产品七日年化收益率作图】依赖表，用于更新理财图鉴。
     '''
     现金管理类_七日年化 = df9.copy()
-    底层数据_七日年化收益率作图_temp1 = pd.DataFrame()
     LatestWeeklyYield = 现金管理类_七日年化.set_index(['EndDate','FinProCode']).unstack()['LatestWeeklyYield']
+    LatestWeeklyYield=LatestWeeklyYield.loc[:,LatestWeeklyYield.mean()>1]
+    LatestWeeklyYield=LatestWeeklyYield.loc[:,LatestWeeklyYield.count()>50]
+    LatestWeeklyYield=LatestWeeklyYield.interpolate()
     df1_temp = preprocess(df1,None,if_filter_exsist=False)
     df1_temp = df1_temp[df1_temp['InvestmentType']=='现金管理类']
     df2_temp = df2
@@ -51,9 +53,8 @@ def cash_product_info_draw(start_date,end_date,df1,df2,df9,if_sector = False):
         df4_temp_licai_sector = df4_temp
         df3_temp_daixiao_sector = df3_temp
         df4_temp_daixiao_sector = df4_temp
-    底层数据_七日年化收益率作图_temp1 = pd.DataFrame()
-    底层数据_七日年化收益率作图_temp2 = pd.DataFrame()
     #未剔除母子关系
+    temp1_list=[]
     for jg_type in ['代销机构','发行机构']:
         if jg_type == '代销机构':
             df3_temp = df3_temp_daixiao_sector
@@ -65,20 +66,29 @@ def cash_product_info_draw(start_date,end_date,df1,df2,df9,if_sector = False):
     #         wight = group[['RegistrationCode','AssetValue']].drop_duplicates(subset='RegistrationCode').dropna()['AssetValue']
             wight = group.loc[codes.index,'AssetValue']
             wight.index = codes
-        #     print(LatestWeeklyYield[codes])
-            temp = pd.DataFrame()
             if len(codes)>1:
-                temp = LatestWeeklyYield[codes].apply(lambda x:weighted_avg(x,wight),axis=1).rename((name))
+                if jg_type=='发行机构':
+                    temp = LatestWeeklyYield[codes].apply(lambda x:weighted_avg(x,wight),axis=1).rename((name))
+                else:
+                    temp = LatestWeeklyYield[codes].mean(axis=1).rename((name))
             elif len(codes)==1:
-                temp = LatestWeeklyYield[codes]
+                temp = LatestWeeklyYield[codes].copy()
                 temp.columns = [name]
             else:
                 continue
             temp.loc['机构类型'] = jg_type
-            底层数据_七日年化收益率作图_temp1 = pd.concat([底层数据_七日年化收益率作图_temp1,temp],axis=1)
+            temp1_list.append(temp)
+    
+    底层数据_七日年化收益率作图_temp1 = pd.concat(temp1_list,axis=1)
+    if not if_sector:
+        代销机构平均_temp1=底层数据_七日年化收益率作图_temp1.loc[:,底层数据_七日年化收益率作图_temp1.loc['机构类型',:]=='代销机构']
+        代销机构平均_temp1=代销机构平均_temp1.iloc[:-2].mean(axis=1)
+        代销机构平均_temp1.loc['机构类型']='代销机构'
+        底层数据_七日年化收益率作图_temp1['代销机构平均']=代销机构平均_temp1
     底层数据_七日年化收益率作图_temp1.loc['是否剔除母子关系'] = '否'
 
     #剔除母子关系
+    temp2_list=[]
     for jg_type in ['代销机构','发行机构']:
         if jg_type == '代销机构':
             df4_temp = df4_temp_daixiao_sector
@@ -91,16 +101,25 @@ def cash_product_info_draw(start_date,end_date,df1,df2,df9,if_sector = False):
             wight = group.loc[codes.index,'AssetValue']
             wight.index = codes
         #     print(LatestWeeklyYield[codes])
-            temp = pd.DataFrame()
             if len(codes)>1:
-                temp = LatestWeeklyYield[codes].apply(lambda x:weighted_avg(x,wight),axis=1).rename((name))
+                if jg_type=='发行机构':
+                    temp = LatestWeeklyYield[codes].apply(lambda x:weighted_avg(x,wight),axis=1).rename((name))
+                else:
+                    temp = LatestWeeklyYield[codes].mean(axis=1).rename((name))
             elif len(codes)==1:
-                temp = LatestWeeklyYield[codes]
+                temp = LatestWeeklyYield[codes].copy()
                 temp.columns = [name]
             else:
                 continue
             temp.loc['机构类型'] = jg_type
-            底层数据_七日年化收益率作图_temp2 = pd.concat([底层数据_七日年化收益率作图_temp2,temp],axis=1)
+            temp2_list.append(temp)
+    底层数据_七日年化收益率作图_temp2 = pd.concat(temp2_list,axis=1)
+    if not if_sector:
+        代销机构平均_temp2=底层数据_七日年化收益率作图_temp2.loc[:,底层数据_七日年化收益率作图_temp2.loc['机构类型',:]=='代销机构']
+        代销机构平均_temp2=代销机构平均_temp2.iloc[:-2].mean(axis=1)
+        代销机构平均_temp2.loc['机构类型']='代销机构'
+        底层数据_七日年化收益率作图_temp2['代销机构平均']=代销机构平均_temp2
+    
     底层数据_七日年化收益率作图_temp2.loc['是否剔除母子关系'] = '是'
     底层数据_七日年化收益率作图 = pd.concat([底层数据_七日年化收益率作图_temp1,底层数据_七日年化收益率作图_temp2],axis=1)
     #计算市场收益
@@ -110,7 +129,10 @@ def cash_product_info_draw(start_date,end_date,df1,df2,df9,if_sector = False):
     wight.index = codes
     底层数据_七日年化收益率作图['市场'] = LatestWeeklyYield.apply(lambda x:weighted_avg(x,wight),axis=1)
     # 底层数据_七日年化收益率作图.loc[['是否剔除母子关系']+list(底层数据_七日年化收益率作图.index[:-1]),:].to_excel(path_outputdir+"/底层数据_现金管理类产品七日年化收益率作图.xlsx")
-    return 底层数据_七日年化收益率作图.loc[['是否剔除母子关系','机构类型']+list(底层数据_七日年化收益率作图.index[:-2]),:]
+    底层数据_七日年化收益率作图.loc['辅助',:]=底层数据_七日年化收益率作图.columns+底层数据_七日年化收益率作图.loc['是否剔除母子关系',:]
+    底层数据_七日年化收益率作图=底层数据_七日年化收益率作图.loc[['是否剔除母子关系','辅助','机构类型']+list(底层数据_七日年化收益率作图.index[:-2]),:]
+    return 底层数据_七日年化收益率作图
+
 
 def cash_product_info(cash_product_info_draw):
     '''
@@ -121,15 +143,16 @@ def cash_product_info(cash_product_info_draw):
         - 底层数据_现金管理类产品分析:【底层数据_现金管理类产品分析】依赖表，用于更新理财图鉴。
     '''
     底层数据_现金管理类产品 = pd.DataFrame()
+    cash_product_info_draw=cash_product_info_draw.iloc[:-1,:]
     #计算各期限年化收益率和排名
     for if_exclud_mom_relation in ['是','否']:
         for jg_type in ['发行机构','代销机构']:
-            cash_product_info_draw_temp = cash_product_info_draw.loc[:,(cash_product_info_draw.iloc[0,:]==if_exclud_mom_relation)&(cash_product_info_draw.iloc[1,:]==jg_type)]
-            result_temp = cash_product_info_draw_temp.iloc[2:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 1,frequency = 1,axis=0).rename('近一周年化收益率').to_frame()
-            result_temp['近一月年化收益率'] = cash_product_info_draw_temp.iloc[2:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 4,frequency = 1,axis=0)
-            result_temp['近三月年化收益率'] = cash_product_info_draw_temp.iloc[2:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 13,frequency = 1,axis=0)
-            result_temp['近半年年化收益率'] = cash_product_info_draw_temp.iloc[2:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 26,frequency = 1,axis=0)
-            result_temp['近一年年化收益率'] = cash_product_info_draw_temp.iloc[2:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 52,frequency = 1,axis=0)
+            cash_product_info_draw_temp = cash_product_info_draw.loc[:,(cash_product_info_draw.loc['是否剔除母子关系',:]==if_exclud_mom_relation)&(cash_product_info_draw.iloc[2,:]==jg_type)]
+            result_temp = cash_product_info_draw_temp.iloc[3:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 1,frequency = 1,axis=0).rename('近一周年化收益率').to_frame()
+            result_temp['近一月年化收益率'] = cash_product_info_draw_temp.iloc[3:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 4,frequency = 1,axis=0)
+            result_temp['近三月年化收益率'] = cash_product_info_draw_temp.iloc[3:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 13,frequency = 1,axis=0)
+            result_temp['近半年年化收益率'] = cash_product_info_draw_temp.iloc[3:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 26,frequency = 1,axis=0)
+            result_temp['近一年年化收益率'] = cash_product_info_draw_temp.iloc[3:,:].apply(WeeklyYield_to_rangereturn_to_annulized,length = 52,frequency = 1,axis=0)
             result_temp['近一周年化收益率_排名'] = result_temp['近一周年化收益率'].rank(method='min',ascending=False).astype(str).apply(lambda x :x+"/"+str(len(result_temp['近一周年化收益率'].dropna())))
             result_temp['近一月年化收益率_排名'] = result_temp['近一月年化收益率'].rank(method='min',ascending=False).astype(str).apply(lambda x :x+"/"+str(len(result_temp['近一月年化收益率'].dropna())))
             result_temp['近三月年化收益率_排名'] = result_temp['近三月年化收益率'].rank(method='min',ascending=False).astype(str).apply(lambda x :x+"/"+str(len(result_temp['近三月年化收益率'].dropna())))

@@ -28,7 +28,7 @@ def licai_comp_basic_info(start_date,end_date,df1):
     while date >= start_date:
         print(" -Processing date ",date)
         month_begin_date = date - dateutil.relativedelta.relativedelta(months=1) + dateutil.relativedelta.relativedelta(days=1)#月初
-        df1_temp = preprocess(df1,month_begin_date)#这组表只需要用到基础数据，即df1
+        df1_temp = preprocess(df1,end_date)#这组表只需要用到基础数据，即df1
     #     df1_temp = df1.copy()
     #     df2_temp = df2[(df2['代销开始日']<start_date)&(df2['代销结束日']>month_begin_date)]
 

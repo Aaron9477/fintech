@@ -18,7 +18,7 @@ def np_average_juzhen (values):
         #print(values.shape)
         return values
     else:
-        if (values['AssetValue'].notna().sum()==0)|((values['AssetValue']).sum()<0.0000001):
+        if (values['AssetValue'].notna().sum()==0)|((values['AssetValue']).sum()<=0):
             weight_ave=pd.DataFrame()
             weight_ave=values.iloc[:,:-1]
             weight_ave['count']=values.iloc[:,:-1].count(axis=1)
@@ -102,7 +102,6 @@ def netvalue_analysis_paint(start_date,df1,df2,df7,result_type1='single',result_
     df4_temp = df4_temp.drop_duplicates(subset=['代销机构','FinProCode'])
     df8_merge = pd.merge(df7_stand,df3_temp[['代销机构','FinProCode','InvestmentType','AssetValue']],on='FinProCode')
 
-
     for m in ['否','是']:
         #理财子公司
         if m=='是':
@@ -115,27 +114,29 @@ def netvalue_analysis_paint(start_date,df1,df2,df7,result_type1='single',result_
         if m=='是':
             df8_merge=pd.merge(df7_stand,df4_temp[['代销机构','FinProCode','InvestmentType', 'AssetValue']],on='FinProCode')
             #print(111)
-        底层数据_净值走势_代销机构=df8_merge.groupby(['代销机构','InvestmentType']).apply(np_average_juzhen).droplevel(None)
+        底层数据_净值走势_代销机构=df8_merge.groupby(['代销机构','InvestmentType']).mean()
         底层数据_净值走势_代销机构=底层数据_净值走势_代销机构.drop(['FinProCode', 'AssetValue'], axis=1)
-        
+        底层数据_净值走势_代销机构_平均=底层数据_净值走势_代销机构.groupby(['InvestmentType']).mean()
+        底层数据_净值走势_代销机构_平均['理财公司简称']='代销机构平均'
+        底层数据_净值走势_代销机构_平均.reset_index(inplace=True)
+        底层数据_净值走势_代销机构_平均.set_index(['理财公司简称','InvestmentType'],inplace=True)
         #合并
-        底层数据_净值走势=pd.concat([底层数据_净值走势_理财公司,底层数据_净值走势_代销机构]) 
+        底层数据_净值走势=pd.concat([底层数据_净值走势_理财公司,底层数据_净值走势_代销机构,底层数据_净值走势_代销机构_平均]) 
         
         if m=='是':
             底层数据_净值走势.insert(0,'是否剔除母子关系','是')
             底层数据_净值走势=底层数据_净值走势.swaplevel()
-            #list(底层数据_净值走势.index.names)
             底层数据_净值走势.sort_index(inplace=True)
             底层数据_净值走势=底层数据_净值走势.swaplevel()
             底层数据_净值走势_是=底层数据_净值走势.copy()
-            #print(1)
+            
         if m=='否':
             底层数据_净值走势.insert(0,'是否剔除母子关系','否')
             底层数据_净值走势=底层数据_净值走势.swaplevel()
             底层数据_净值走势.sort_index(inplace=True)
             底层数据_净值走势=底层数据_净值走势.swaplevel()
             底层数据_净值走势_否=底层数据_净值走势.copy()
-            #print(2)
+
         
     底层数据_净值走势=pd.concat([底层数据_净值走势_否,底层数据_净值走势_是]) 
     底层数据_净值走势=底层数据_净值走势.apply(drop_line,axis=1)#删除数据过少行数，默认数据量少于10删除

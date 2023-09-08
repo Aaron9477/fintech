@@ -6,7 +6,6 @@
 # @Project   : 银行理财代销图鉴
 # @Function  ：将从数据库中取出的产品净值数据进行预处理
 # --------------------------------
-
 import numpy as np
 import pandas as pd
 from typing import Union
@@ -24,7 +23,7 @@ def get_processed_nv_datas(net_value_df_all:pd.DataFrame,
     warnings.filterwarnings('ignore')
     result = pd.DataFrame()
     failed = []
-    for lc_code,is_cash_single in tqdm(zip(lc_codes,is_cash),desc='get_processed_nv_datas'):
+    for lc_code,is_cash_single in tqdm(zip(lc_codes,[is_cash]*len(lc_codes)),desc='get_processed_nv_datas'):
         try:
             result = pd.concat([result,get_processed_nv_data(net_value_df_all=net_value_df_all,lc_code=lc_code,begin_date= None,end_date = None,is_cash = is_cash_single)],axis=0)
         except:
@@ -170,7 +169,7 @@ def GetProcessedNavData(net_value_df: pd.DataFrame,
             else:
                 # 如果得分都很低的话，就采用净值来判断
                 nav_df = GetProcessedNavData(net_value_df=net_value_df,licai_code=licai_code, begin_date=begin_date, end_date=end_date,
-                                             is_cash=False)
+                                             is_cash=False).copy()
                 if nav_df is None:
                     return None
                 else:
