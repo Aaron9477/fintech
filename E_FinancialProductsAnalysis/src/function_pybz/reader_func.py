@@ -6,6 +6,10 @@ def get_raw_files_jy(statistics_date):
         all_data_file = '../../data_pybz/jy_理财产品要素数据-聚源.csv'
         jy_raw_asset_file = '../../data_pybz/jy_金融产品资产配置_23年一季报_230626.csv'
         jy_top10_file = '../../data_pybz/jy_前十大持仓_23年一季报_230626.csv'
+    elif statistics_date == '2023-06-30':
+        all_data_file = '../../data_pybz/jy_理财产品要素数据-聚源_0630_230906.csv'
+        jy_raw_asset_file = '../../data_pybz/jy_金融产品资产配置_23年二季报_230906.csv'
+        jy_top10_file = '../../data_pybz/jy_前十大持仓_23年二季报_230906.csv'
     else:
         raise ValueError
 
@@ -19,7 +23,7 @@ def get_raw_files(statistics_date):
         raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年二季报_230515.csv'
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_22年二季报_230515.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_22年二季报_230515.csv'
-        series_name_file = '../../data_pybz/out5.xlsx'
+        series_name_file = '../../data_pybz/out5-23q2.xlsx'
     elif statistics_date == '2022-09-30':
         all_data_file = '../../data_pybz/pyjy_bank_wealth_product_0930.csv'
         raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_22年三季报_230515.csv'
@@ -40,9 +44,9 @@ def get_raw_files(statistics_date):
         series_name_file = '../../data_pybz/out5-23q1.xlsx'
     elif statistics_date == '2023-06-30':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0630.csv'
-        raw_asset_file = '../../data_pybz/pybz_23Q2资产配置数据-普益.csv'
-        top10_file = '../../data_pybz/pybz_23Q2前十大数据-普益.csv'
-        non_standard_file = '../../data_pybz/pybz_23Q2非标资产数据-普益.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q2_230904.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q2_230904.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q2_230904.csv'
         series_name_file = '../../data_pybz/out5-23q1.xlsx'
     else:
         raise ValueError

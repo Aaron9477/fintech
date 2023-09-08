@@ -10,7 +10,7 @@ import argparse
 import datetime
 
 from func import get_trading_day, get_product_exist
-from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files
+from E_FinancialProductsAnalysis.src.function_pybz.reader_func import get_raw_files, get_raw_files_jy
 
 #显示所有的列
 pd.set_option('display.max_columns', None)
@@ -47,7 +47,7 @@ def df_preprocess(input_df, all_data_df, statistics_date):
     output_df = output_df.merge(all_data_df, how='inner', on='FinProCode')
 
     # 筛选公募基金
-    output_df = output_df[(output_df['primary_type_chi'] == '基金') & (output_df['secondary_type_chi'] == '公募基金')]
+    output_df = output_df[(output_df['InvestObject'] == 'FCC0000001WK')]
 
     # 合并基金代码，筛选代码非空的基金
     output_df = output_df[(output_df['SecuCode'].notnull())]
@@ -73,23 +73,26 @@ def split_list_average_n(origin_list, n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-03-31')
+    parser.add_argument('--statistics_date', type=str, help='statistics_date', default='2023-06-30')
     args = parser.parse_args()
 
     statistics_date = args.statistics_date
 
-    all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file = get_raw_files(args.statistics_date)
+    jy_raw_files = get_raw_files_jy(statistics_date)
+    all_data_file = jy_raw_files[0]
+    jy_top10_file = jy_raw_files[2]
+
+    all_data_df = pd.read_csv(all_data_file)
+    top10_df = pd.read_csv(jy_top10_file)
 
     trading_day = get_trading_day(statistics_date)
 
-    df = pd.read_csv(top10_file)
-    all_data_df = pd.read_csv(all_data_file)[['FinProCode', 'MaturityDate',
-                                                   'product_establish_date', 'RegistrationCode', 'ProductType']]
+    all_data_df = all_data_df[['FinProCode', 'MaturityDate', 'product_establish_date', 'RegistrationCode', 'ProductType']]
 
     # 前处理
-    df = df_preprocess(df, all_data_df, statistics_date)
+    top10_df = df_preprocess(top10_df, all_data_df, statistics_date)
 
-    fund_list = code_preprocess(df['SecuCode'].values)
+    fund_list = code_preprocess(top10_df['SecuCode'].values)
     fund_set = set(fund_list)
     fund_str = ','.join(fund_set)
 
@@ -99,23 +102,23 @@ if __name__ == '__main__':
         wind_return = w.wsd(fund_str, feat, trading_day, trading_day, "annualized=0;PriceAdj=F")
         fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
         value_list = [fund_value_dict[x] for x in fund_list]
-        df[feature_name[index]] = value_list
+        top10_df[feature_name[index]] = value_list
         index += 1
 
     trading_day_before_1y = str(int(trading_day[:4])-1) + trading_day[4:]
     wind_return = w.wsd(fund_str, "NAV_adj", trading_day_before_1y, trading_day_before_1y, "PriceAdj=F")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
-    df['统计日一年前净值'] = value_list
+    top10_df['统计日一年前净值'] = value_list
 
     wind_return = w.wsd(fund_str, "NAV_adj", trading_day, trading_day, "PriceAdj=F")
     fund_value_dict = dict(zip(wind_return.Codes, wind_return.Data[0]))
     value_list = [fund_value_dict[x] for x in fund_list]
-    df['统计日净值'] = value_list
+    top10_df['统计日净值'] = value_list
 
-    df['一年收益率'] = df['统计日净值'] / df['统计日一年前净值'] - 1
+    top10_df['一年收益率'] = top10_df['统计日净值'] / top10_df['统计日一年前净值'] - 1
 
-    df.to_excel("基金信息_" + statistics_date + ".xlsx")
+    top10_df.to_excel("jy_基金信息_" + statistics_date + ".xlsx")
 
 
 

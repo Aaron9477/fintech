@@ -19,6 +19,8 @@ def choose_report_asset_table(input, statistics_date):
             tags = ['半年度投资管理报告', '2022二季报', '季度投资管理报告']
         elif statistics_date == "2023-03-31":
             tags = ['2023一季报', '季度投资管理报告']
+        elif statistics_date == "2023-06-30":
+            tags = ['季度投资管理报告', '二季度暨半年度投资管理报告', '半年度投资管理报告']
         else:
             raise ValueError("statistics_date 错误")
 
@@ -58,6 +60,10 @@ def choose_report_detail_table(input, statistics_date):
             tags = ['2021年报', '2021四季报']
         elif statistics_date == "2023-03-31":
             tags = ['2023一季报']
+        elif statistics_date == "2023-03-31":
+            tags = ['2023一季报']
+        elif statistics_date == "2023-06-30":
+            tags = ['2023中报', '2023二季报', '2023二季报暨半年报', '2023二季报暨半年报暨半年报', '2023二季报暨半年报报']
         else:
             raise ValueError("statistics_date 错误")
 
