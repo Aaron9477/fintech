@@ -44,10 +44,28 @@ def get_raw_files(statistics_date):
         series_name_file = '../../data_pybz/out5-23q1.xlsx'
     elif statistics_date == '2023-06-30':
         all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0630.csv'
-        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q2_230904.csv'
-        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q2_230904.csv'
-        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q2_230904.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q2_230928.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q2_230928.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q2_230928.csv'
         series_name_file = '../../data_pybz/out5-23q1.xlsx'
+    elif statistics_date == '2023-09-30':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_0930.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_23年Q3_231110.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_23年Q3_231110.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_23年Q3_231110.csv'
+        series_name_file = '../../data_pybz/out5-23q1.xlsx'
+    elif statistics_date == '2023-12-31':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_23Q4_240516.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_24年Q4_240516.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q4_240516.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q4_240516.csv'
+        series_name_file = '../../data_pybz/out5-23q1.xlsx'
+    elif statistics_date == '2024-03-31':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_240331_240514.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_24年Q1_240513.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q1_240513.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q1_240513.csv'
+        series_name_file = '../../data_pybz/out5-24q1.xlsx'
     else:
         raise ValueError
 
@@ -60,6 +78,10 @@ def get_intermediate_files(statistics_date):
     elif statistics_date == '2022-12-31':
         fixed_income_file = '../../22年Q4/固收增强分类结果.xlsx'
     elif statistics_date == '2023-03-31':
+        fixed_income_file = '../../23年Q1/固收增强分类结果.xlsx'
+    elif statistics_date == '2023-06-30':
+        fixed_income_file = '../../23年Q1/固收增强分类结果.xlsx'
+    elif statistics_date == '2023-09-30':
         fixed_income_file = '../../23年Q1/固收增强分类结果.xlsx'
     else:
         raise ValueError

@@ -164,6 +164,8 @@ def get_trading_day(statistics_date):
         trading_day = '2023-03-31'
     elif statistics_date == '2023-06-30':
         trading_day = '2023-06-30'
+    elif statistics_date == '2023-09-30':
+        trading_day = '2023-09-28'
     else:
         raise ValueError
     return trading_day
