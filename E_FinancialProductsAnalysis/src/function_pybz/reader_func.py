@@ -66,6 +66,31 @@ def get_raw_files(statistics_date):
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q1_240513.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q1_240513.csv'
         series_name_file = '../../data_pybz/out5-24q1.xlsx'
+    elif statistics_date == '2024-06-30':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_24Q2_240923.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_24年Q2_240923.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q2_240923.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q2_240923.csv'
+        series_name_file = '../../data_pybz/out5-24q1.xlsx'
+    elif statistics_date == '2024-09-30':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_24Q3_241108.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_24年Q3_241107.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q3_241107.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q3_241107.csv'
+        series_name_file = '../../data_pybz/out5-24q3.xlsx'
+    else:
+        raise ValueError
+
+    return all_data_file, raw_asset_file, top10_file, non_standard_file, series_name_file
+
+
+def get_raw_filesV2(statistics_date):
+    if statistics_date == '2024-06-30':
+        all_data_file = '../../../data_pybz/bank_wealth_product_base_pyjy_24Q2_240923.csv'
+        raw_asset_file = '../../../data_pybz/pybz_金融产品资产配置_24年Q2_240923.csv'
+        top10_file = '../../../data_pybz/pybz_金融产品前十名持仓_24年Q2_240923.csv'
+        non_standard_file = '../../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q2_240923.csv'
+        series_name_file = '../../../data_pybz/out5-24q1.xlsx'
     else:
         raise ValueError
 
