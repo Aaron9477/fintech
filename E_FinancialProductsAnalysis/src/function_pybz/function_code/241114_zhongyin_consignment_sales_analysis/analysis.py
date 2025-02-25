@@ -15,10 +15,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
     # 去年同期一天
     parser.add_argument('--path_基本数据', type=str, help='path_基本数据', default='bank_wealth_product_base_pyjy_24Q3_241108.csv')
-    parser.add_argument('--path_代销数据', type=str, help='path_代销数据', default='中信建投-241115-220701.xlsx')
-    parser.add_argument('--path_业绩数据', type=str, help='path_业绩数据', default='py_licai_product_nv_indicator_for_zhongyinlicai_20220101_20241122.csv')
+    parser.add_argument('--path_代销数据', type=str, help='path_代销数据', default='pybz_代销数据_250131_250206.csv')
+    parser.add_argument('--path_业绩数据', type=str, help='path_业绩数据', default='py_licai_product_nv_indicator_for_zhongyinlicai_20230101_20250126.csv')
     parser.add_argument('--output_file', type=str, help='output_file', default='代销行所有产品数据情况.xlsx')
-    parser.add_argument('--analysis_date', type=str, help='analysis_date', default='2024-11-15')
+    parser.add_argument('--analysis_date', type=str, help='analysis_date', default='2025-01-26')
     args = parser.parse_args()
 
     all_data_file = args.path_基本数据
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     analysis_date = args.analysis_date
 
     all_data_df = pd.read_csv(all_data_file)
-    consignment_data_df = pd.read_excel(consignment_data_file)
+    consignment_data_df = pd.read_csv(consignment_data_file)
     performance_data_df = pd.read_csv(performance_data_file, encoding='gbk')
 
     all_data_df = preprocess(all_data_df, analysis_date)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
                               'carry_fee_x', 'sale_fee_x', 'IssueObject_y']]
 
     consignment_data_df = consignment_data_df[consignment_data_df['代销结束日'] > analysis_date]
-    consignment_data_df = consignment_data_df[['产品登记编码', '普益代码', '发行机构', '代销机构', '代销开始日', '代销结束日']]
+    consignment_data_df = consignment_data_df[['产品登记码', '产品ID', '发行机构名称', '代销机构', '代销开始日', '代销结束日']]
 
     performance_data_df = performance_data_df[['FinProCode', 'begin_date', 'end_index', 'interval_ret_one_m',
                                                'interval_ret_two_m', 'interval_ret_three_m', 'interval_ret_six_m',
@@ -49,7 +49,7 @@ if __name__ == '__main__':
                                                'interval_ret_annual', 'max_draw_down', 'shapre_original', 'vol_annual']]
 
     combin_df = pd.merge(all_data_df, consignment_data_df, how='inner', left_on=['RegistrationCode', 'FinProCode'],
-                         right_on=['产品登记编码', '普益代码'])  # 合并匹配基础数据和代销数据
+                         right_on=['产品登记码', '产品ID'])  # 合并匹配基础数据和代销数据
 
     combin_df = pd.merge(combin_df, performance_data_df, how='left', on='FinProCode')
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                                      'interval_ret_three_m': '近3个月累计收益率', 'interval_ret_six_m': '近6个月累计收益率',
                                      'interval_ret_one_y': '近1年累计收益率'}, inplace=True)
 
-    cash_prod_df = cash_prod_df[['产品名称', '登记编码', '发行机构', '产品成立日期', '产品终止日期', '代销机构', '代销开始日', '代销结束日',
+    cash_prod_df = cash_prod_df[['产品名称', '登记编码', '发行机构名称', '产品成立日期', '产品终止日期', '代销机构', '代销开始日', '代销结束日',
 
                                  '产品类型', '募集方式', '运作方式', '开放形式', '币种', '销售对象', '最短持有期', '风险等级',
                                  '业绩基准', '业绩基准上限（%）', '业绩基准下限（%）', '管理费（%）', '业绩计提比例（%）', '销售服务费（%）',
@@ -96,7 +96,7 @@ if __name__ == '__main__':
                                  '产品存续规模（元）', '近1个月年化收益率', '近2个月年化收益率', '近3个月年化收益率', '近6个月年化收益率',
                                  '近1年年化收益率', '成立以来年化收益率', ]]
 
-    not_cash_prod_df = not_cash_prod_df[['产品名称', '登记编码', '发行机构', '产品成立日期', '产品终止日期', '代销机构', '代销开始日', '代销结束日',
+    not_cash_prod_df = not_cash_prod_df[['产品名称', '登记编码', '发行机构名称', '产品成立日期', '产品终止日期', '代销机构', '代销开始日', '代销结束日',
 
                                         '产品类型', '募集方式', '运作方式', '开放形式', '币种', '销售对象', '最短持有期', '风险等级',
                                         '业绩基准', '业绩基准上限（%）', '业绩基准下限（%）', '管理费（%）', '业绩计提比例（%）', '销售服务费（%）',

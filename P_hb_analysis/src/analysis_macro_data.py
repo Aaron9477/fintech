@@ -1,18 +1,18 @@
 import pandas as pd
 from datetime import datetime, timedelta
+import os
 
-
-def analysis_reserves():
+def analysis_reserves(today_date, macro_file):
+    print("银行准备金：")
     # 设定目标日期和相关计算日期
-    target_date = pd.Timestamp('2024-12-11')
+    target_date = today_date - timedelta(days=2)
     one_year_ago_date = target_date - pd.DateOffset(years=1)
 
     # 读取Excel文件
-    file_path = '../docs/宏观数据.xlsx'
-    data = pd.read_excel(file_path, sheet_name='存款机构准备金(周)')
+    data = pd.read_excel(macro_file, sheet_name='存款机构准备金(周)')
 
-    # 数据单位从百万美元转化为万亿美元
-    data['美国-美联储存款机构准备金(周)'] = data['美国-美联储存款机构准备金(周)'] / 100
+    # 数据单位从十亿美元转化为万亿美元
+    data['美国-美联储存款机构准备金(周)'] = data['美国-美联储存款机构准备金(周)'] / 1000
 
     # 转换日期列为datetime类型，便于筛选和计算
     data['日期'] = pd.to_datetime(data['日期'])
@@ -90,16 +90,15 @@ def analysis_reserves():
 
 
 
+def analysis_ONRPP(today_date, macro_file):
+    print("隔夜逆回购：")
 
-
-def analysis_ONRPP():
     # 定义一周的时间范围
-    end_date = datetime(2024, 12, 12)
+    end_date = today_date - timedelta(days=1)
     start_date = end_date - timedelta(weeks=1) + timedelta(days=1)
 
     # 读取Excel文件
-    file_path = '../docs/宏观数据.xlsx'
-    df = pd.read_excel(file_path, sheet_name='ON RRP')
+    df = pd.read_excel(macro_file, sheet_name='ON RRP')
 
     df['美国-美联储隔夜逆回购操作(ON RRP)'] = df['美国-美联储隔夜逆回购操作(ON RRP)'] / 100
 
@@ -138,6 +137,70 @@ def analysis_ONRPP():
     print(f"本周（{start_date.strftime('%Y-%m-%d')}-{end_date.strftime('%Y-%m-%d')}）均值 {this_week_mean:.2f} 万亿美元，周环比 {week_on_week_change:+.2f}%")
     print(f"本周单日最低值为 {this_week_min_date.strftime('%Y-%m-%d')} 的 {this_week_min:.2f} 万亿美元")
     print(f"近一年最低值为 {one_year_min_date.strftime('%Y-%m-%d')} 的 {one_year_min:.2f} 万亿美元")
+
+
+def add_blank_lines(today_date, file_path):
+    print("稳定币市值记录表增加行")
+
+    target_date = today_date - timedelta(days=1)
+    today_str = today_date.strftime("%Y%m%d")
+    output_file = f"../docs/稳定币市值记录_{today_str}.xlsx"
+    if os.path.exists(output_file):
+        print(f"文件 {output_file} 已存在，不进行覆盖。")
+        return
+
+    # 计算需要插入的日期
+    dates_to_insert = [
+        target_date,
+        target_date - timedelta(weeks=1),
+        target_date - timedelta(weeks=2),
+        target_date - pd.DateOffset(months=1),
+        target_date - pd.DateOffset(months=2),
+        target_date - pd.DateOffset(months=3),
+        target_date - pd.DateOffset(months=6),
+    ]
+
+    # 处理每个 Sheet
+    new_data = {}
+    sheets = ["USDT", "USDC"]
+    for sheet in sheets:
+        # 读取数据
+        df = pd.read_excel(file_path, sheet_name=sheet)
+
+        # 确保时间列为 datetime 类型
+        df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], format="%Y%m%d")
+
+        # 找出数据中已存在的日期
+        existing_dates = set(df.iloc[:, 0])
+
+        # 过滤掉已经存在的日期
+        missing_dates = [d for d in dates_to_insert if d not in existing_dates]
+
+        # 如果没有需要插入的日期，则跳过处理
+        if not missing_dates:
+            new_data[sheet] = df
+            continue
+
+        # 创建需要插入的空行
+        new_rows = pd.DataFrame({df.columns[0]: missing_dates})
+
+        # 其余列填充 NaN
+        for col in df.columns[1:]:
+            new_rows[col] = None
+
+        # 合并数据并去重排序
+        df = pd.concat([df, new_rows]).sort_values(by=df.columns[0]).reset_index(drop=True)
+
+        # 保存处理后的数据
+        new_data[sheet] = df
+
+    # 保存到新的 Excel 文件
+    with pd.ExcelWriter(output_file) as writer:
+        for sheet, df in new_data.items():
+            df.to_excel(writer, sheet_name=sheet, index=False)
+
+    print(f"处理完成，文件已保存：{output_file}")
+
 
 
 # def analysis_USDT():
@@ -210,6 +273,16 @@ def analysis_ONRPP():
 
 
 if __name__ == '__main__':
-    analysis_reserves()
-    analysis_ONRPP()
+    today_date = datetime(2025, 2, 21)
+    macro_file = '../docs/宏观数据.xlsx'
+
+    # 准备金、逆回购计算
+    analysis_reserves(today_date, macro_file)
+    analysis_ONRPP(today_date, macro_file)
+
+    # U需要填充的日期，增加行
+    market_cap_file = "../docs/稳定币市值记录_20250214.xlsx"
+    # add_blank_lines(today_date, market_cap_file)
+
+    # 暂时无用
     # analysis_USDT()

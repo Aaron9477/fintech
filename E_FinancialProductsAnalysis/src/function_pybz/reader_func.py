@@ -78,6 +78,13 @@ def get_raw_files(statistics_date):
         top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q3_241107.csv'
         non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q3_241107.csv'
         series_name_file = '../../data_pybz/out5-24q3.xlsx'
+    elif statistics_date == '2024-12-31':
+        all_data_file = '../../data_pybz/bank_wealth_product_base_pyjy_24Q4_250212.csv'
+        raw_asset_file = '../../data_pybz/pybz_金融产品资产配置_24年Q4_250219.csv'
+        top10_file = '../../data_pybz/pybz_金融产品前十名持仓_24年Q4_250219.csv'
+        non_standard_file = '../../data_pybz/pybz_非标准化债权及股权类资产表_24年Q4_250219.csv'
+        # todo: 此处未更新
+        series_name_file = '../../data_pybz/out5-24q3.xlsx'
     else:
         raise ValueError
 
